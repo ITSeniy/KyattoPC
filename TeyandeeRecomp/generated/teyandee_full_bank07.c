@@ -221830,22 +221830,6 @@ label_EFDA:;
     /* $EFDA: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_E5A3(); g_code_window_base = _swb; } return;
 }
 
-void func_EFD1(void) {
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_push("func_EFD1");
-#endif
-label_EFD1:;
-    /* $EFD1: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x3E; FLAG_NZ(g_cpu.A);
-label_EFD3:;
-    /* $EFD3: 20 */ maybe_trigger_vblank(6); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_FE8D(); g_code_window_base = _swb; }
-label_EFD6:;
-    /* $EFD6: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xDC; FLAG_NZ(g_cpu.A);
-label_EFD8:;
-    /* $EFD8: 85 */ maybe_trigger_vblank(3); nes_write(0x34, g_cpu.A);
-label_EFDA:;
-    /* $EFDA: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_E5A3(); g_code_window_base = _swb; } return;
-}
-
 void func_E6C6(void) {
 #ifdef RECOMP_STACK_TRACKING
     recomp_stack_push("func_E6C6");
@@ -258401,34 +258385,6 @@ label_EFC7:;
     /* $EFC7: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x20; FLAG_NZ(g_cpu.A);
 label_EFC9:;
     /* $EFC9: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_F749(); g_code_window_base = _swb; } return;
-}
-
-void func_EFC3(void) {
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_push("func_EFC3");
-#endif
-label_EFC3:;
-    /* $EFC3: AE */ maybe_trigger_vblank(4); g_cpu.X = nes_read(0x7620); FLAG_NZ(g_cpu.X);
-label_EFC6:;
-    /* $EFC6: E4 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0xA9); int r=g_cpu.X-m; g_cpu.C=(g_cpu.X>=m)?1:0; FLAG_NZ(r&0xFF); }
-label_EFC8:;
-    /* $EFC8: 20 */ maybe_trigger_vblank(6); nes_dispatch_call(0x494C, -1);
-label_EFCB:;
-    /* $EFCB: F7 */ maybe_trigger_vblank(6); { uint16_t a=(0xA9 + g_cpu.X) & 0xFF; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); int16_t r=g_cpu.A-v-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,v); g_cpu.A=r&0xFF; }
-label_EFCD:;
-    /* $EFCD: 8B */ maybe_trigger_vblank(2); /* ILLEGAL $8B — skip 2 */
-label_EFCF:;
-    /* $EFCF: 76 */ maybe_trigger_vblank(6); { uint16_t a=(0xE4 + g_cpu.X) & 0xFF; uint8_t v=nes_read(a); uint8_t c=g_cpu.C; g_cpu.C=v&1; v=((v>>1)|(c<<7))&0xFF; nes_write(a,v); FLAG_NZ(v); }
-label_EFD1:;
-    /* $EFD1: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x3E; FLAG_NZ(g_cpu.A);
-label_EFD3:;
-    /* $EFD3: 20 */ maybe_trigger_vblank(6); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_FE8D(); g_code_window_base = _swb; }
-label_EFD6:;
-    /* $EFD6: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xDC; FLAG_NZ(g_cpu.A);
-label_EFD8:;
-    /* $EFD8: 85 */ maybe_trigger_vblank(3); nes_write(0x34, g_cpu.A);
-label_EFDA:;
-    /* $EFDA: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_E5A3(); g_code_window_base = _swb; } return;
 }
 
 void func_CCF8(void) {
@@ -337348,18 +337304,6 @@ label_D643:;
     recomp_stack_pop();
 #endif
     return;
-}
-
-void func_EFD6(void) {
-#ifdef RECOMP_STACK_TRACKING
-    recomp_stack_push("func_EFD6");
-#endif
-label_EFD6:;
-    /* $EFD6: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xDC; FLAG_NZ(g_cpu.A);
-label_EFD8:;
-    /* $EFD8: 85 */ maybe_trigger_vblank(3); nes_write(0x34, g_cpu.A);
-label_EFDA:;
-    /* $EFDA: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_E5A3(); g_code_window_base = _swb; } return;
 }
 
 void func_E34B(void) {
@@ -493926,5 +493870,133 @@ label_E5D3:;
     recomp_stack_pop();
 #endif
     return;
+}
+
+static void func_EFC1_body(int _entry) {
+    switch (_entry) {
+        case 1: goto label_EFD1;
+        case 2: goto label_EFC3;
+        case 3: goto label_EFD6;
+    }
+label_EFC1:;
+    /* $EFC1: E4 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0xA9); int r=g_cpu.X-m; g_cpu.C=(g_cpu.X>=m)?1:0; FLAG_NZ(r&0xFF); }
+label_EFC3:;
+    /* $EFC3: AE */ maybe_trigger_vblank(4); g_cpu.X = nes_read(0x7620); FLAG_NZ(g_cpu.X);
+label_EFC6:;
+    /* $EFC6: E4 */ maybe_trigger_vblank(3); { uint8_t m=nes_read(0xA9); int r=g_cpu.X-m; g_cpu.C=(g_cpu.X>=m)?1:0; FLAG_NZ(r&0xFF); }
+label_EFC8:;
+    /* $EFC8: 20 */ maybe_trigger_vblank(6); nes_dispatch_call(0x494C, -1);
+label_EFCB:;
+    /* $EFCB: F7 */ maybe_trigger_vblank(6); { uint16_t a=(0xA9 + g_cpu.X) & 0xFF; uint8_t v=(nes_read(a)+1)&0xFF; nes_write(a,v); int16_t r=g_cpu.A-v-(1-g_cpu.C); FLAG_NZC_SUB(r,g_cpu.A,v); g_cpu.A=r&0xFF; }
+label_EFCD:;
+    /* $EFCD: 8B */ maybe_trigger_vblank(2); /* ILLEGAL $8B — skip 2 */
+label_EFCF:;
+    /* $EFCF: 76 */ maybe_trigger_vblank(6); { uint16_t a=(0xE4 + g_cpu.X) & 0xFF; uint8_t v=nes_read(a); uint8_t c=g_cpu.C; g_cpu.C=v&1; v=((v>>1)|(c<<7))&0xFF; nes_write(a,v); FLAG_NZ(v); }
+label_EFD1:;
+    /* $EFD1: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0x3E; FLAG_NZ(g_cpu.A);
+label_EFD3:;
+    /* $EFD3: 20 */ maybe_trigger_vblank(6); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_FE8D(); g_code_window_base = _swb; }
+label_EFD6:;
+    /* $EFD6: A9 */ maybe_trigger_vblank(2); g_cpu.A = 0xDC; FLAG_NZ(g_cpu.A);
+label_EFD8:;
+    /* $EFD8: 85 */ maybe_trigger_vblank(3); nes_write(0x34, g_cpu.A);
+label_EFDA:;
+    /* $EFDA: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_E5A3(); g_code_window_base = _swb; } return;
+}
+
+void func_EFC1(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_EFC1");
+#endif
+    func_EFC1_body(0);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_EFD1(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_EFD1");
+#endif
+    func_EFC1_body(1);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_EFC3(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_EFC3");
+#endif
+    func_EFC1_body(2);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_EFD6(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_EFD6");
+#endif
+    func_EFC1_body(3);
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_pop();
+#endif
+}
+
+void func_C018(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_C018");
+#endif
+label_C018:;
+    /* $C018: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); call_by_address_tail(0xC0B1, -1); return;
+}
+
+void func_C021(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_C021");
+#endif
+label_C021:;
+    /* $C021: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); call_by_address_tail(0xC0B1, -1); return;
+}
+
+void func_C030(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_C030");
+#endif
+label_C030:;
+    /* $C030: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_E3B5(); g_code_window_base = _swb; } return;
+}
+
+void func_C045(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_C045");
+#endif
+label_C045:;
+    /* $C045: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_E66A(); g_code_window_base = _swb; } return;
+}
+
+void func_C054(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_C054");
+#endif
+label_C054:;
+    /* $C054: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_E460(); g_code_window_base = _swb; } return;
+}
+
+void func_C087(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_C087");
+#endif
+label_C087:;
+    /* $C087: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_E214(); g_code_window_base = _swb; } return;
+}
+
+void func_C08A(void) {
+#ifdef RECOMP_STACK_TRACKING
+    recomp_stack_push("func_C08A");
+#endif
+label_C08A:;
+    /* $C08A: 4C */ maybe_trigger_vblank(3); maybe_trigger_vblank(2); { uint16_t _swb = g_code_window_base; g_code_window_base = 0xE000; func_E5BF(); g_code_window_base = _swb; } return;
 }
 

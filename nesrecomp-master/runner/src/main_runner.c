@@ -1050,14 +1050,26 @@ smoke_skip_input:
         SDL_RenderPresent(s_renderer);
     }
 
-    /* 60Hz pacing — skipped in turbo mode */
+    /* 60.0 Hz pacing — matches APU output of 735 samples/frame @ 44100 Hz.
+     * Integer Delay(16) runs ~62.5 fps and overfeeds the audio ring (continuous
+     * overflow drops → crackle). Accumulator averages exactly 1000/60 ms/frame.
+     * Skipped in turbo mode. */
     if (!g_turbo) {
-        static uint32_t s_last_tick = 0;
+        static double   s_next_deadline = 0.0;
+        static uint32_t s_have_deadline = 0;
         uint32_t now = SDL_GetTicks();
-        if (s_last_tick == 0) s_last_tick = now;
-        uint32_t elapsed = now - s_last_tick;
-        if (elapsed < 16) SDL_Delay(16 - elapsed);
-        s_last_tick = SDL_GetTicks();
+        if (!s_have_deadline) {
+            s_next_deadline = (double)now;
+            s_have_deadline = 1;
+        }
+        s_next_deadline += 1000.0 / 60.0;
+        if ((double)now < s_next_deadline) {
+            uint32_t wait = (uint32_t)(s_next_deadline - (double)now);
+            if (wait > 0) SDL_Delay(wait);
+        } else if ((double)now > s_next_deadline + 50.0) {
+            /* Fell far behind (hitch / debugger): resync so we don't spiral. */
+            s_next_deadline = (double)now;
+        }
     }
 }
 
@@ -1226,16 +1238,17 @@ void nesrecomp_runner_run(int argc, char *argv[]) {
     /* Gamepad support (Xbox/PS/Switch/generic via SDL's mapping DB). */
     controller_init();
 
-    /* Open audio device — use SDL_QueueAudio (callback=NULL) to push samples
-     * from the game thread without needing a separate audio thread. */
+    /* Open audio device with a pull callback that drains the DRC bridge.
+     * samples=256 ≈ 5.8 ms/block @ 44100 — low device latency; the bridge
+     * ring (target 40 ms) is the main jitter cushion, not the SDL buffer. */
     {
         SDL_AudioSpec want;
         SDL_memset(&want, 0, sizeof(want));
         want.freq     = 44100;
         want.format   = AUDIO_S16SYS;
         want.channels = 1;
-        want.samples  = 512;
-        want.callback = nes_audio_cb;   /* round-2: pull from the bridge */
+        want.samples  = 256;
+        want.callback = nes_audio_cb;
         SDL_AudioSpec got;
         s_audio_dev = SDL_OpenAudioDevice(NULL, 0, &want, &got,
                                           SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
@@ -1248,27 +1261,28 @@ void nesrecomp_runner_run(int argc, char *argv[]) {
             rc.channels    = 1;
             rc.source_rate = 44100.0;
             rc.host_rate   = (double)got.freq;
-            /* Tuned to the measured video-paced burst swing (~100 ms): a deep ring
-             * with a high target absorbs producer droughts so the device never
-             * starves. Latency cost ~90 ms is inaudible for these games. */
-            rc.target_ms   = 60.0;
-            rc.ring_ms     = 250.0;
-            /* Pitch fidelity: keep ratio correction at 0 when host rate matches
-             * source (typical Windows 44100). Non-zero max_correction (±1.5%) was
-             * introducing a continuous micro pitch bend that players hear as
-             * "slightly off" / NTSC-vs-PAL-ish even when the device reports 44100.
-             * Underrun concealment still works via ring depth + preroll. */
-            rc.max_correction = 0.0;
-            rc.stretch_enable = 0;
-            /* Phase-1 boot pre-roll: prime the ring to ~200 ms before playback so
-             * the cold-start hitch (JIT warm-up / first audio bursts) is concealed.
-             * The added latency is irrelevant pre-gameplay; the servo drains the
-             * excess down to target_ms over time. */
-            rc.preroll_ms = 200.0;
+            /* Latency vs robustness trade-off:
+             *  - target ~40 ms: small enough that AV lag is not noticeable in play,
+             *    large enough to absorb one video-frame hitch (~16 ms) + SDL block.
+             *  - ring 150 ms: headroom for producer bursts without holding 200+ ms.
+             *  - mild DRC (±0.5%): tracks host crystal vs video clock so the ring
+             *    neither underruns (silence clicks) nor overflows (drop clicks).
+             *    The old ±1.5% clamp was audible as pitch bend; 0.5% is not.
+             *  - stretch on: brief producer stalls loop recent audio instead of
+             *    fading to zero (the classic crackle source with max_correction=0).
+             *  - short preroll (~80 ms): hides cold-start, then the servo drains
+             *    down to target_ms (requires max_correction > 0 — previously 0
+             *    left the ring stuck near 200 ms for the whole session). */
+            rc.target_ms      = 40.0;
+            rc.ring_ms        = 150.0;
+            rc.max_correction = 0.005;
+            rc.stretch_enable = 1;
+            rc.preroll_ms     = 80.0;
             s_bridge_ready = (rab_init(&s_bridge, &rc) == 0);
             SDL_PauseAudioDevice(s_audio_dev, 0); /* start playback */
-            printf("[APU] Audio device opened: %d Hz, %d ch  (bridge=%s, target=%.0fms)\n",
-                   got.freq, got.channels, s_bridge_ready ? "on" : "FAILED", rc.target_ms);
+            printf("[APU] Audio device opened: %d Hz, %d ch  (bridge=%s, target=%.0fms, corr=%.1f%%)\n",
+                   got.freq, got.channels, s_bridge_ready ? "on" : "FAILED",
+                   rc.target_ms, rc.max_correction * 100.0);
             if (recomp_audio_debug_init())
                 printf("[audio-debug] capture ON (synth=%d)\n", recomp_audio_synth_mode());
         }

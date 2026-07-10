@@ -113,12 +113,24 @@ LDA #>$8379 / PHA / LDA #<$8379 / PHA / …build $00… / JMP ($00)
 Per-frame AI: fixed `$DE74` maps **R6=4/R7=5** (bank2), walks object slots
 at `$0420+`, indexes type table `$AD20` → state table → `JMP ($02)`.
 
-Type 0 state 0 is **`$ADD0`** (death FX / despawn). Playtest MISS `$ADD0`
-left death incomplete → remaining enemies froze (shared object loop broken)
-and no death effect. Seed bank2 AI state handlers + `$C04E`/`$C05A`/… helpers.
+Type table is **types 0–84** at `$AD20–$ADC9` (not just 0–31).  
+Type 0 state 0 is **`$ADD0`** (death FX / despawn).  
+Breakable rocks/props use **type 40** (`$B8C8` → `$B8CE`) and **type 41**
+(`$B8E9` → `$B8EF`); death variant **type 71** (`$ADE1` → `$ADE7`).
 
-## Audio pitch note
+Playtest MISS on those entries (or on trampolines `$C02D`/`$C01E`/`$C060` they
+call) left the shared object walk incomplete → **no break FX** and **all
+enemies/powerups on screen froze**. Seed full type-table handlers + the whole
+`$C00F–$C0AE` trampoline table and destinations.
 
-Runner APU is **NTSC** (`CPU_FREQ 1789773`, 735 samples @ 60 Hz).  
-SDL bridge allows **±1.5%** rate correction (`max_correction`) to track host audio clock — can sound slightly “off” vs Mesen/Nestopia, but not a full PAL shift (~−7.6%).  
-If pitch is very wrong, check console line `[APU] Audio device opened: N Hz` (host rate ≠ 44100 → DRC active).
+## Audio pitch / latency note
+
+Runner APU is **NTSC** (`CPU_FREQ 1789773`, 735 samples @ **60.0 Hz**).  
+Video pacing targets exactly `1000/60` ms/frame (not integer `Delay(16)` ≈ 62.5 fps) so the producer does not overfeed the audio ring.
+
+SDL bridge (`recomp_audio_drc.h`):
+- **target fill ~40 ms**, preroll ~80 ms (servo drains preroll → target)
+- **±0.5%** rate correction (`max_correction`) tracks host crystal vs video clock
+- **stretch** conceals brief underruns instead of silence clicks
+
+If pitch is very wrong, check console line `[APU] Audio device opened: N Hz` (host rate ≠ 44100 → DRC resamples).
