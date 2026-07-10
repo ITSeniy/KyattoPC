@@ -1,0 +1,89 @@
+# Build trees
+**/build/
+**/build_recomp/
+**/build_release/
+**/out/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/*.dir/
+**/*.obj
+**/*.lib
+**/*.exe
+**/*.dll
+**/*.pdb
+**/*.ilk
+**/*.exp
+**/*.idb
+**/*.tlog
+**/*.lastbuildstate
+**/*.recipe
+**/x64/
+**/Debug/
+**/Release/
+**/RelWithDebInfo/
+**/MinSizeRel/
+**/.vs/
+**/*.sln.docstates
+**/*.vcxproj.user
+
+# ROMs and runtime saves (copyrighted / local)
+**/*.nes
+**/*.fds
+**/*.sav
+**/*.srm
+
+# Logs and archives
+**/*.log
+**/*.zip
+**/*.7z
+**/*.rar
+
+# Bank / CHR extracts (regenerate from ROM)
+**/banks/*.bin
+**/prg8k_*.bin
+**/*.chr.bin
+
+# Linked deps from setup scripts (use sibling nesrecomp-master)
+**/nesrecomp
+**/nestopia-core
+
+# Tile override runtime dumps
+**/tiles/
+**/chr_dump/
+
+# Ghidra project DB (large / machine-specific)
+**/ghidra/*.rep/
+**/ghidra/*.gpr
+**/ghidra/*.lock
+**/ghidra/*.lock~
+**/ghidra/*.gar
+
+# Recompiler audit dumps
+**/*_finder_audit.csv
+**/*_auto_entries.csv
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.idea/
+.vscode/
+.mcp.json
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/.venv/
+**/venv/
+
+# Node (if tests present)
+**/node_modules/
+
+# Ephemeral playtest / smoke captures (local)
+**/playtest*.txt
+**/play_rev*.txt
+**/smoke*.txt
+**/crash_smoke.txt
+**/wait_*.txt

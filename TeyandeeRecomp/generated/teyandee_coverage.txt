@@ -1,0 +1,3476 @@
+# NESRecomp coverage report
+# ROM: 8 PRG banks x 16KB, mapper 4
+# Analyzed functions: 4129  Reachable instructions: 566500
+
+## Reachable opcode classes
+  OFFICIAL                                            count=417086    distinct_bytes=150
+  BRK (official)                                      count=22341     distinct_bytes=1
+  LAX (unofficial, implemented)                       count=8138      distinct_bytes=7
+  NOP/DOP/TOP (unofficial, implemented)               count=23638     distinct_bytes=27
+  SBC #imm alias \$EB (unofficial, implemented)       count=1577      distinct_bytes=1
+  SAX (unofficial, implemented)                       count=3453      distinct_bytes=4
+  DCP (unofficial, sized-skip)                        count=3302      distinct_bytes=7
+  ISC (unofficial, sized-skip)                        count=13338     distinct_bytes=7
+  SLO (unofficial, sized-skip)                        count=16796     distinct_bytes=7
+  RLA (unofficial, sized-skip)                        count=8577      distinct_bytes=7
+  SRE (unofficial, sized-skip)                        count=6341      distinct_bytes=7
+  RRA (unofficial, sized-skip)                        count=4004      distinct_bytes=7
+  AAC/ANC (unofficial, sized-skip)                    count=1742      distinct_bytes=2
+  ALR (unofficial, sized-skip)                        count=1846      distinct_bytes=1
+  ARR (unofficial, sized-skip)                        count=334       distinct_bytes=1
+  AXS (unofficial, sized-skip)                        count=555       distinct_bytes=1
+  XAA (unofficial UNSTABLE, sized-skip)               count=725       distinct_bytes=1
+  LAS (unofficial UNSTABLE, sized-skip)               count=645       distinct_bytes=1
+  TAS (unofficial UNSTABLE, sized-skip)               count=1020      distinct_bytes=1
+  SHA (unofficial UNSTABLE, sized-skip)               count=862       distinct_bytes=2
+  SHX (unofficial UNSTABLE, sized-skip)               count=1582      distinct_bytes=1
+  SHY (unofficial UNSTABLE, sized-skip)               count=3338      distinct_bytes=1
+  KIL/STP/JAM (unofficial HALT)                       count=25260     distinct_bytes=12
+
+## Unofficial opcodes seen (per byte)
+  $02  KIL    8395 sites
+  $03  SLO    7509 sites
+  $04  NOP*   2709 sites
+  $07  SLO    2580 sites
+  $0B  AAC    1151 sites
+  $0C  NOP*   1701 sites
+  $0F  SLO    2864 sites
+  $12  KIL    1183 sites
+  $13  SLO    1452 sites
+  $14  NOP*   1336 sites
+  $17  SLO    1068 sites
+  $1A  NOP*   1262 sites
+  $1B  SLO    773 sites
+  $1C  NOP*   764 sites
+  $1F  SLO    550 sites
+  $22  KIL    1559 sites
+  $23  RLA    1321 sites
+  $27  RLA    2141 sites
+  $2B  AAC    591 sites
+  $2F  RLA    1059 sites
+  $32  KIL    9426 sites
+  $33  RLA    819 sites
+  $34  NOP*   1284 sites
+  $37  RLA    1644 sites
+  $3A  NOP*   612 sites
+  $3B  RLA    393 sites
+  $3C  NOP*   709 sites
+  $3F  RLA    1200 sites
+  $42  KIL    1491 sites
+  $43  SRE    1538 sites
+  $44  NOP*   850 sites
+  $47  SRE    755 sites
+  $4B  ALR    1846 sites
+  $4F  SRE    473 sites
+  $52  KIL    363 sites
+  $53  SRE    453 sites
+  $54  NOP*   263 sites
+  $57  SRE    569 sites
+  $5A  NOP*   561 sites
+  $5B  SRE    2097 sites
+  $5C  NOP*   457 sites
+  $5F  SRE    456 sites
+  $62  KIL    331 sites
+  $63  RRA    405 sites
+  $64  NOP*   282 sites
+  $67  RRA    346 sites
+  $6B  ARR    334 sites
+  $6F  RRA    862 sites
+  $72  KIL    317 sites
+  $73  RRA    292 sites
+  $74  NOP*   315 sites
+  $77  RRA    442 sites
+  $7A  NOP*   198 sites
+  $7B  RRA    833 sites
+  $7C  NOP*   324 sites
+  $7F  RRA    824 sites
+  $80  NOP*   1801 sites
+  $82  NOP*   1325 sites
+  $83  SAX    1512 sites
+  $87  SAX    791 sites
+  $89  NOP*   537 sites
+  $8B  XAA    725 sites
+  $8F  SAX    513 sites
+  $92  KIL    421 sites
+  $93  SHA    547 sites
+  $97  SAX    637 sites
+  $9B  TAS    1020 sites
+  $9C  SHY    3338 sites
+  $9E  SHX    1582 sites
+  $9F  SHA    315 sites
+  $A3  LAX    1048 sites
+  $A7  LAX    429 sites
+  $AB  LAX    1011 sites
+  $AF  LAX    812 sites
+  $B2  KIL    439 sites
+  $B3  LAX    1126 sites
+  $B7  LAX    443 sites
+  $BB  LAS    645 sites
+  $BF  LAX    3269 sites
+  $C2  NOP*   1179 sites
+  $C3  DCP    1030 sites
+  $C7  DCP    564 sites
+  $CB  AXS    555 sites
+  $CF  DCP    294 sites
+  $D2  KIL    315 sites
+  $D3  DCP    627 sites
+  $D4  NOP*   106 sites
+  $D7  DCP    342 sites
+  $DA  NOP*   357 sites
+  $DB  DCP    201 sites
+  $DC  NOP*   205 sites
+  $DF  DCP    244 sites
+  $E2  NOP*   672 sites
+  $E3  ISC    1439 sites
+  $E7  ISC    284 sites
+  $EB  SBC*   1577 sites
+  $EF  ISC    693 sites
+  $F2  KIL    1020 sites
+  $F3  ISC    1538 sites
+  $F4  NOP*   1239 sites
+  $F7  ISC    2574 sites
+  $FA  NOP*   402 sites
+  $FB  ISC    347 sites
+  $FC  NOP*   2188 sites
+  $FF  ISC    6463 sites
+
+## BRK ($00) reachable sites
+  count: unique=6120  (listing first 1024)
+    bank=7    addr=$C7DD
+    bank=7    addr=$D446
+    bank=7    addr=$F80C
+    bank=7    addr=$F604
+    bank=7    addr=$F81F
+    bank=7    addr=$FA04
+    bank=7    addr=$F61C
+    bank=7    addr=$EB26
+    bank=7    addr=$F9F9
+    bank=7    addr=$FA0F
+    bank=7    addr=$FA1A
+    bank=7    addr=$FA4B
+    bank=7    addr=$FA60
+    bank=7    addr=$FA64
+    bank=7    addr=$FA81
+    bank=7    addr=$FAB2
+    bank=7    addr=$FAB9
+    bank=7    addr=$FAC4
+    bank=7    addr=$FAEE
+    bank=7    addr=$FB2F
+    bank=7    addr=$FB40
+    bank=7    addr=$FEA6
+    bank=7    addr=$FEB6
+    bank=7    addr=$FF07
+    bank=7    addr=$FF08
+    bank=7    addr=$FF09
+    bank=7    addr=$FF0A
+    bank=7    addr=$FF0B
+    bank=7    addr=$FF0C
+    bank=7    addr=$FF0D
+    bank=7    addr=$FF0E
+    bank=7    addr=$FF0F
+    bank=7    addr=$FF10
+    bank=7    addr=$FF11
+    bank=7    addr=$FF12
+    bank=7    addr=$FF13
+    bank=7    addr=$FF14
+    bank=7    addr=$FF15
+    bank=7    addr=$FF16
+    bank=7    addr=$FF17
+    bank=7    addr=$FF18
+    bank=7    addr=$FF19
+    bank=7    addr=$FF1A
+    bank=7    addr=$FF1B
+    bank=7    addr=$FF1C
+    bank=7    addr=$FF1D
+    bank=7    addr=$FF1E
+    bank=7    addr=$FF1F
+    bank=7    addr=$FF20
+    bank=7    addr=$FF21
+    bank=7    addr=$FF22
+    bank=7    addr=$FF23
+    bank=7    addr=$FF24
+    bank=7    addr=$FF25
+    bank=7    addr=$FF26
+    bank=7    addr=$FF27
+    bank=7    addr=$FF28
+    bank=7    addr=$FF29
+    bank=7    addr=$FF2A
+    bank=7    addr=$FF2B
+    bank=7    addr=$FF2C
+    bank=7    addr=$FF2D
+    bank=7    addr=$FF2E
+    bank=7    addr=$FF2F
+    bank=7    addr=$FF30
+    bank=7    addr=$FF31
+    bank=7    addr=$FF32
+    bank=7    addr=$FF33
+    bank=7    addr=$FF34
+    bank=7    addr=$FF35
+    bank=7    addr=$FF36
+    bank=7    addr=$FF37
+    bank=7    addr=$FF38
+    bank=7    addr=$FF39
+    bank=7    addr=$FF3A
+    bank=7    addr=$FF3B
+    bank=7    addr=$FF3C
+    bank=7    addr=$FF3D
+    bank=7    addr=$FF3E
+    bank=7    addr=$FF3F
+    bank=7    addr=$FF40
+    bank=7    addr=$FF41
+    bank=7    addr=$FF42
+    bank=7    addr=$FF43
+    bank=7    addr=$FF44
+    bank=7    addr=$FF45
+    bank=7    addr=$FF46
+    bank=7    addr=$FF47
+    bank=7    addr=$FF48
+    bank=7    addr=$FF49
+    bank=7    addr=$FF4A
+    bank=7    addr=$FF4B
+    bank=7    addr=$FF4C
+    bank=7    addr=$FF4D
+    bank=7    addr=$FF4E
+    bank=7    addr=$FF4F
+    bank=7    addr=$FF50
+    bank=7    addr=$FF51
+    bank=7    addr=$FF52
+    bank=7    addr=$FF53
+    bank=7    addr=$FF54
+    bank=7    addr=$FF55
+    bank=7    addr=$FF56
+    bank=7    addr=$FF57
+    bank=7    addr=$FF58
+    bank=7    addr=$FF59
+    bank=7    addr=$FF5A
+    bank=7    addr=$FF5B
+    bank=7    addr=$FF5C
+    bank=7    addr=$FF5D
+    bank=7    addr=$FF5E
+    bank=7    addr=$FF5F
+    bank=7    addr=$FF60
+    bank=7    addr=$FF61
+    bank=7    addr=$FF62
+    bank=7    addr=$FF63
+    bank=7    addr=$FF64
+    bank=7    addr=$FF65
+    bank=7    addr=$FF66
+    bank=7    addr=$FF67
+    bank=7    addr=$FF68
+    bank=7    addr=$FF69
+    bank=7    addr=$FF6A
+    bank=7    addr=$FF6B
+    bank=7    addr=$FF6C
+    bank=7    addr=$FF6D
+    bank=7    addr=$FF6E
+    bank=7    addr=$FF6F
+    bank=7    addr=$FF70
+    bank=7    addr=$FF71
+    bank=7    addr=$FF72
+    bank=7    addr=$FF73
+    bank=7    addr=$FF74
+    bank=7    addr=$FF75
+    bank=7    addr=$FF76
+    bank=7    addr=$FF77
+    bank=7    addr=$FF78
+    bank=7    addr=$FF79
+    bank=7    addr=$FF7A
+    bank=7    addr=$FF7B
+    bank=7    addr=$FF7C
+    bank=7    addr=$FF7D
+    bank=7    addr=$FF7E
+    bank=7    addr=$FF7F
+    bank=7    addr=$FF80
+    bank=7    addr=$FF81
+    bank=7    addr=$FF82
+    bank=7    addr=$FF83
+    bank=7    addr=$FF84
+    bank=7    addr=$FF85
+    bank=7    addr=$FF86
+    bank=7    addr=$FF87
+    bank=7    addr=$FF88
+    bank=7    addr=$FF89
+    bank=7    addr=$FF8A
+    bank=7    addr=$FF8B
+    bank=7    addr=$FF8C
+    bank=7    addr=$FF8D
+    bank=7    addr=$FF8E
+    bank=7    addr=$FF8F
+    bank=7    addr=$FFF2
+    bank=7    addr=$FFF3
+    bank=7    addr=$FFF4
+    bank=7    addr=$FFF5
+    bank=7    addr=$FFF6
+    bank=7    addr=$FFF7
+    bank=7    addr=$FFF8
+    bank=7    addr=$FFF9
+    bank=7    addr=$FFDF
+    bank=7    addr=$E1F4
+    bank=7    addr=$E1F7
+    bank=7    addr=$E1FC
+    bank=7    addr=$E1FD
+    bank=7    addr=$E202
+    bank=7    addr=$E203
+    bank=7    addr=$E204
+    bank=7    addr=$E207
+    bank=7    addr=$E20C
+    bank=7    addr=$E20D
+    bank=7    addr=$E20E
+    bank=7    addr=$E20F
+    bank=7    addr=$E212
+    bank=7    addr=$E213
+    bank=7    addr=$EE1D
+    bank=7    addr=$CB4D
+    bank=7    addr=$DEC9
+    bank=7    addr=$FE61
+    bank=7    addr=$E320
+    bank=7    addr=$E352
+    bank=7    addr=$E396
+    bank=7    addr=$EF7F
+    bank=7    addr=$F085
+    bank=7    addr=$F30B
+    bank=7    addr=$F3D9
+    bank=7    addr=$F41C
+    bank=7    addr=$E41F
+    bank=7    addr=$E428
+    bank=7    addr=$E44B
+    bank=7    addr=$E456
+    bank=7    addr=$E461
+    bank=7    addr=$E46C
+    bank=7    addr=$FE4C
+    bank=7    addr=$E542
+    bank=7    addr=$F56D
+    bank=7    addr=$FD4D
+    bank=7    addr=$F858
+    bank=7    addr=$E619
+    bank=7    addr=$E63B
+    bank=7    addr=$E65B
+    bank=7    addr=$E6C3
+    bank=7    addr=$F9C1
+    bank=7    addr=$F9CA
+    bank=7    addr=$F9D1
+    bank=7    addr=$F9D4
+    bank=7    addr=$F9D5
+    bank=7    addr=$F9DC
+    bank=7    addr=$C4B7
+    bank=7    addr=$C91C
+    bank=7    addr=$D001
+    bank=7    addr=$D006
+    bank=7    addr=$D00E
+    bank=7    addr=$FCB2
+    bank=7    addr=$F05E
+    bank=7    addr=$FC96
+    bank=7    addr=$C44A
+    bank=7    addr=$C463
+    bank=7    addr=$C501
+    bank=7    addr=$C54C
+    bank=7    addr=$C708
+    bank=7    addr=$D1B1
+    bank=7    addr=$C93C
+    bank=7    addr=$CC3D
+    bank=7    addr=$CA49
+    bank=7    addr=$DCF1
+    bank=7    addr=$D4FC
+    bank=7    addr=$F7FE
+    bank=7    addr=$F7FF
+    bank=7    addr=$F80B
+    bank=7    addr=$F80D
+    bank=7    addr=$F80E
+    bank=7    addr=$F80F
+    bank=7    addr=$F810
+    bank=7    addr=$F820
+    bank=7    addr=$F821
+    bank=7    addr=$F822
+    bank=7    addr=$F823
+    bank=7    addr=$F824
+    bank=7    addr=$F825
+    bank=7    addr=$F826
+    bank=7    addr=$F827
+    bank=7    addr=$F828
+    bank=7    addr=$F829
+    bank=7    addr=$F83E
+    bank=7    addr=$F83F
+    bank=7    addr=$F846
+    bank=7    addr=$F847
+    bank=7    addr=$F848
+    bank=7    addr=$F849
+    bank=7    addr=$F84A
+    bank=7    addr=$F84B
+    bank=7    addr=$F85B
+    bank=7    addr=$F85C
+    bank=7    addr=$F85D
+    bank=7    addr=$F85E
+    bank=7    addr=$F871
+    bank=7    addr=$F872
+    bank=7    addr=$F873
+    bank=7    addr=$F885
+    bank=7    addr=$F888
+    bank=7    addr=$F89C
+    bank=7    addr=$F8B7
+    bank=7    addr=$F8CB
+    bank=7    addr=$F8F2
+    bank=7    addr=$F91B
+    bank=7    addr=$C51A
+    bank=7    addr=$D05F
+    bank=7    addr=$C4E1
+    bank=7    addr=$E05E
+    bank=7    addr=$C456
+    bank=7    addr=$C609
+    bank=7    addr=$C11F
+    bank=7    addr=$FAAF
+    bank=7    addr=$D621
+    bank=7    addr=$C5D7
+    bank=7    addr=$FC1C
+    bank=7    addr=$FFAA
+    bank=7    addr=$D01E
+    bank=7    addr=$FFAF
+    bank=7    addr=$C82E
+    bank=7    addr=$DE04
+    bank=7    addr=$F2C2
+    bank=7    addr=$E9D1
+    bank=7    addr=$C760
+    bank=7    addr=$CF1B
+    bank=7    addr=$CFA4
+    bank=7    addr=$CFA7
+    bank=7    addr=$D19D
+    bank=7    addr=$D19E
+    bank=7    addr=$D19F
+    bank=7    addr=$D1A0
+    bank=7    addr=$D1A1
+    bank=7    addr=$D1A3
+    bank=7    addr=$C815
+    bank=7    addr=$F6D0
+    bank=7    addr=$C819
+    bank=7    addr=$C738
+    bank=7    addr=$E93B
+    bank=7    addr=$ED38
+    bank=7    addr=$CA36
+    bank=7    addr=$E8C2
+    bank=7    addr=$D033
+    bank=7    addr=$FEE6
+    bank=7    addr=$CD3E
+    bank=7    addr=$D02F
+    bank=7    addr=$D0AB
+    bank=7    addr=$C933
+    bank=7    addr=$CFA1
+    bank=7    addr=$C74F
+    bank=7    addr=$D0FC
+    bank=7    addr=$D0B1
+    bank=7    addr=$D79B
+    bank=7    addr=$D79C
+    bank=7    addr=$D79D
+    bank=7    addr=$D79E
+    bank=7    addr=$D79F
+    bank=7    addr=$D871
+    bank=7    addr=$D872
+    bank=7    addr=$D873
+    bank=7    addr=$D874
+    bank=7    addr=$D879
+    bank=7    addr=$D87A
+    bank=7    addr=$D87B
+    bank=7    addr=$DCEC
+    bank=7    addr=$DE0C
+    bank=7    addr=$DE24
+    bank=7    addr=$DE34
+    bank=7    addr=$DE3C
+    bank=7    addr=$DE44
+    bank=7    addr=$DE4C
+    bank=7    addr=$DE5C
+    bank=7    addr=$DE64
+    bank=7    addr=$DE6C
+    bank=7    addr=$D0A0
+    bank=7    addr=$F0EA
+    bank=7    addr=$C848
+    bank=7    addr=$D066
+    bank=7    addr=$F096
+    bank=7    addr=$D452
+    bank=7    addr=$D084
+    bank=7    addr=$EEC9
+    bank=7    addr=$C67D
+    bank=7    addr=$E94D
+    bank=7    addr=$C9D6
+    bank=7    addr=$E688
+    bank=7    addr=$E54D
+    bank=7    addr=$C554
+    bank=7    addr=$D043
+    bank=7    addr=$DA33
+    bank=7    addr=$D03F
+    bank=7    addr=$DB76
+    bank=7    addr=$C0E6
+    bank=7    addr=$CDDE
+    bank=7    addr=$C8DD
+    bank=7    addr=$DD02
+    bank=7    addr=$FDDD
+    bank=7    addr=$C867
+    bank=7    addr=$C921
+    bank=7    addr=$E0BE
+    bank=7    addr=$DE82
+    bank=7    addr=$E293
+    bank=7    addr=$F112
+    bank=7    addr=$C50D
+    bank=7    addr=$EB13
+    bank=7    addr=$D1F3
+    bank=7    addr=$F6CC
+    bank=7    addr=$C49D
+    bank=7    addr=$EA02
+    bank=7    addr=$E98A
+    bank=7    addr=$E991
+    bank=7    addr=$CAEA
+    bank=7    addr=$EA96
+    bank=7    addr=$EB1C
+    bank=7    addr=$EB4C
+    bank=7    addr=$EB6E
+    bank=7    addr=$EB56
+    bank=7    addr=$CD21
+    bank=7    addr=$EB5D
+    bank=7    addr=$EBB3
+    bank=7    addr=$C2AE
+    bank=7    addr=$DAED
+    bank=7    addr=$C28E
+    bank=7    addr=$FFE6
+    bank=7    addr=$EC75
+    bank=7    addr=$E494
+    bank=7    addr=$EE07
+    bank=7    addr=$C8EF
+    bank=7    addr=$EE5C
+    bank=7    addr=$FCCA
+    bank=7    addr=$F0C8
+    bank=7    addr=$F5AD
+    bank=7    addr=$F182
+    bank=7    addr=$FEA1
+    bank=7    addr=$F1D6
+    bank=7    addr=$F205
+    bank=7    addr=$CE06
+    bank=7    addr=$F2A4
+    bank=7    addr=$F2F0
+    bank=7    addr=$F343
+    bank=7    addr=$CEE5
+    bank=7    addr=$CEEA
+    bank=7    addr=$F70F
+    bank=7    addr=$CEFC
+    bank=7    addr=$C9EE
+    bank=7    addr=$CA4E
+    bank=7    addr=$F8A1
+    bank=7    addr=$D169
+    bank=7    addr=$F6A7
+    bank=7    addr=$DEF7
+    bank=7    addr=$E100
+    bank=7    addr=$FAE0
+    bank=7    addr=$CF22
+    bank=7    addr=$FB0F
+    bank=7    addr=$F3C3
+    bank=7    addr=$C3E0
+    bank=7    addr=$E015
+    bank=7    addr=$DFB7
+    bank=7    addr=$C639
+    bank=7    addr=$CD23
+    bank=7    addr=$C335
+    bank=7    addr=$CF0D
+    bank=7    addr=$FC2F
+    bank=7    addr=$FFB7
+    bank=7    addr=$E751
+    bank=7    addr=$FC80
+    bank=7    addr=$D0BF
+    bank=7    addr=$DF20
+    bank=7    addr=$D344
+    bank=7    addr=$C347
+    bank=7    addr=$C92D
+    bank=7    addr=$C820
+    bank=7    addr=$CA1F
+    bank=7    addr=$FCA1
+    bank=7    addr=$FCAA
+    bank=7    addr=$C78D
+    bank=7    addr=$E37F
+    bank=7    addr=$D10C
+    bank=7    addr=$FD23
+    bank=7    addr=$CAB5
+    bank=7    addr=$EBE7
+    bank=7    addr=$D6B7
+    bank=7    addr=$E7BF
+    bank=7    addr=$DFA2
+    bank=7    addr=$E34D
+    bank=7    addr=$DEBB
+    bank=7    addr=$D58E
+    bank=7    addr=$DFE1
+    bank=7    addr=$DCE4
+    bank=7    addr=$D9DE
+    bank=7    addr=$C0DD
+    bank=7    addr=$D9FF
+    bank=7    addr=$DFFB
+    bank=7    addr=$DCDF
+    bank=7    addr=$E90A
+    bank=7    addr=$C4C6
+    bank=7    addr=$EA9D
+    bank=7    addr=$C5E4
+    bank=7    addr=$EC95
+    bank=7    addr=$DD9B
+    bank=7    addr=$D908
+    bank=7    addr=$CC09
+    bank=7    addr=$EB0C
+    bank=7    addr=$C47E
+    bank=7    addr=$C6AC
+    bank=7    addr=$D325
+    bank=7    addr=$E9BF
+    bank=7    addr=$CA0A
+    bank=7    addr=$FFDA
+    bank=7    addr=$FF06
+    bank=7    addr=$D708
+    bank=7    addr=$D718
+    bank=7    addr=$E391
+    bank=7    addr=$D5DB
+    bank=7    addr=$DA2F
+    bank=7    addr=$FCB7
+    bank=7    addr=$DC73
+    bank=7    addr=$FC59
+    bank=7    addr=$FD44
+    bank=7    addr=$CB01
+    bank=7    addr=$CAC7
+    bank=7    addr=$DF02
+    bank=7    addr=$DC6E
+    bank=7    addr=$E56F
+    bank=7    addr=$C783
+    bank=7    addr=$F809
+    bank=7    addr=$E985
+    bank=7    addr=$F1AF
+    bank=7    addr=$F315
+    bank=7    addr=$E33B
+    bank=7    addr=$E81E
+    bank=7    addr=$E8B3
+    bank=7    addr=$E969
+    bank=0    addr=$9C0A
+    bank=0    addr=$9C10
+    bank=0    addr=$9C14
+    bank=0    addr=$9C1A
+    bank=0    addr=$9C27
+    bank=0    addr=$9C28
+    bank=0    addr=$9C33
+    bank=0    addr=$9C88
+    bank=0    addr=$9C8B
+    bank=0    addr=$9CA6
+    bank=0    addr=$9CD6
+    bank=0    addr=$9DB1
+    bank=0    addr=$9DB2
+    bank=0    addr=$9DB6
+    bank=0    addr=$9DB7
+    bank=0    addr=$9DB8
+    bank=0    addr=$9DBC
+    bank=0    addr=$9DC0
+    bank=0    addr=$9DC1
+    bank=0    addr=$9DC2
+    bank=0    addr=$9DC6
+    bank=0    addr=$9DC7
+    bank=0    addr=$9DCA
+    bank=0    addr=$A55E
+    bank=0    addr=$A55F
+    bank=0    addr=$A560
+    bank=0    addr=$A563
+    bank=0    addr=$A564
+    bank=0    addr=$A565
+    bank=0    addr=$A568
+    bank=0    addr=$A569
+    bank=0    addr=$A56A
+    bank=0    addr=$A56D
+    bank=0    addr=$A56E
+    bank=0    addr=$A56F
+    bank=0    addr=$A572
+    bank=0    addr=$A573
+    bank=0    addr=$A574
+    bank=0    addr=$A581
+    bank=0    addr=$A582
+    bank=0    addr=$A77F
+    bank=0    addr=$A878
+    bank=0    addr=$A91A
+    bank=0    addr=$8E74
+    bank=0    addr=$8E92
+    bank=0    addr=$8E97
+    bank=0    addr=$8E98
+    bank=0    addr=$8EBA
+    bank=0    addr=$8EBF
+    bank=0    addr=$8EC0
+    bank=0    addr=$8EE7
+    bank=0    addr=$8EE8
+    bank=0    addr=$8F1F
+    bank=0    addr=$8F32
+    bank=0    addr=$8F37
+    bank=0    addr=$8F38
+    bank=0    addr=$8F47
+    bank=0    addr=$8F5A
+    bank=0    addr=$8F5F
+    bank=0    addr=$8F60
+    bank=0    addr=$893D
+    bank=0    addr=$893E
+    bank=0    addr=$8943
+    bank=0    addr=$8948
+    bank=0    addr=$894D
+    bank=0    addr=$8952
+    bank=0    addr=$8957
+    bank=0    addr=$897F
+    bank=0    addr=$898E
+    bank=0    addr=$898F
+    bank=0    addr=$8A06
+    bank=0    addr=$8A0B
+    bank=0    addr=$8A10
+    bank=0    addr=$8A15
+    bank=0    addr=$8A1A
+    bank=0    addr=$8A1F
+    bank=0    addr=$8A24
+    bank=0    addr=$8A29
+    bank=0    addr=$8A47
+    bank=0    addr=$8A48
+    bank=0    addr=$8A4C
+    bank=0    addr=$8A4D
+    bank=0    addr=$8A51
+    bank=0    addr=$8A52
+    bank=0    addr=$8A57
+    bank=0    addr=$8A5C
+    bank=0    addr=$8A60
+    bank=0    addr=$8A61
+    bank=0    addr=$8A66
+    bank=0    addr=$8A6B
+    bank=0    addr=$8A6F
+    bank=0    addr=$8A70
+    bank=0    addr=$8A74
+    bank=0    addr=$8A7A
+    bank=0    addr=$8A84
+    bank=0    addr=$8A88
+    bank=0    addr=$8A89
+    bank=0    addr=$8A8E
+    bank=0    addr=$8A93
+    bank=0    addr=$8A97
+    bank=0    addr=$8A98
+    bank=0    addr=$8A9C
+    bank=0    addr=$8A9D
+    bank=0    addr=$8AA2
+    bank=0    addr=$8AA6
+    bank=0    addr=$8AA7
+    bank=0    addr=$8AAB
+    bank=0    addr=$8AAC
+    bank=0    addr=$8AB1
+    bank=0    addr=$8AB5
+    bank=0    addr=$8AB6
+    bank=0    addr=$8ABA
+    bank=0    addr=$8ABB
+    bank=0    addr=$8ABF
+    bank=0    addr=$8AC4
+    bank=0    addr=$8AC9
+    bank=0    addr=$8ACA
+    bank=0    addr=$8ACE
+    bank=0    addr=$8ACF
+    bank=0    addr=$8AD3
+    bank=0    addr=$8AD4
+    bank=0    addr=$8AD9
+    bank=0    addr=$8ADE
+    bank=0    addr=$8AE2
+    bank=0    addr=$8AE3
+    bank=0    addr=$8AE7
+    bank=0    addr=$8AE8
+    bank=0    addr=$8AED
+    bank=0    addr=$8AF2
+    bank=0    addr=$B9D6
+    bank=0    addr=$B9D8
+    bank=0    addr=$B9DB
+    bank=0    addr=$B9DC
+    bank=0    addr=$B9DE
+    bank=0    addr=$80B9
+    bank=0    addr=$8A7E
+    bank=0    addr=$A91B
+    bank=0    addr=$A91C
+    bank=0    addr=$A91D
+    bank=0    addr=$A91E
+    bank=0    addr=$A91F
+    bank=0    addr=$A956
+    bank=0    addr=$A957
+    bank=0    addr=$A958
+    bank=0    addr=$A959
+    bank=0    addr=$A95A
+    bank=0    addr=$A95B
+    bank=0    addr=$A95C
+    bank=0    addr=$A95D
+    bank=0    addr=$A95E
+    bank=0    addr=$A95F
+    bank=0    addr=$B9E5
+    bank=0    addr=$B9E6
+    bank=0    addr=$B9EA
+    bank=0    addr=$B9ED
+    bank=0    addr=$B9EE
+    bank=0    addr=$B9F3
+    bank=0    addr=$B9F7
+    bank=0    addr=$B9F8
+    bank=0    addr=$B9FF
+    bank=0    addr=$BA00
+    bank=0    addr=$BA03
+    bank=0    addr=$BA09
+    bank=0    addr=$BA12
+    bank=0    addr=$BA13
+    bank=0    addr=$BA16
+    bank=0    addr=$BA1F
+    bank=0    addr=$BA24
+    bank=0    addr=$BA25
+    bank=0    addr=$BA28
+    bank=0    addr=$BA29
+    bank=0    addr=$BA2C
+    bank=0    addr=$BA2D
+    bank=0    addr=$BA2E
+    bank=0    addr=$BA2F
+    bank=0    addr=$BA30
+    bank=0    addr=$BA31
+    bank=0    addr=$BA32
+    bank=0    addr=$C44A
+    bank=0    addr=$C463
+    bank=0    addr=$A919
+    bank=1    addr=$8006
+    bank=1    addr=$BA4A
+    bank=1    addr=$9178
+    bank=1    addr=$8000
+    bank=1    addr=$A90B
+    bank=1    addr=$AA0F
+    bank=1    addr=$AB1D
+    bank=1    addr=$800C
+    bank=1    addr=$8776
+    bank=1    addr=$88AE
+    bank=1    addr=$864E
+    bank=1    addr=$864F
+    bank=1    addr=$8653
+    bank=1    addr=$8657
+    bank=1    addr=$8658
+    bank=1    addr=$8696
+    bank=1    addr=$869B
+    bank=1    addr=$869C
+    bank=1    addr=$86BF
+    bank=1    addr=$85D8
+    bank=1    addr=$85ED
+    bank=1    addr=$9D02
+    bank=1    addr=$9E1F
+    bank=1    addr=$A0EC
+    bank=1    addr=$A16D
+    bank=1    addr=$A170
+    bank=1    addr=$A175
+    bank=1    addr=$A176
+    bank=1    addr=$A177
+    bank=1    addr=$A17B
+    bank=1    addr=$A17C
+    bank=1    addr=$A17D
+    bank=1    addr=$A17E
+    bank=1    addr=$A35F
+    bank=1    addr=$A360
+    bank=1    addr=$A361
+    bank=1    addr=$A4F4
+    bank=1    addr=$A4F7
+    bank=1    addr=$A4F8
+    bank=1    addr=$A4FE
+    bank=1    addr=$A4FF
+    bank=1    addr=$A504
+    bank=1    addr=$A50B
+    bank=1    addr=$A514
+    bank=1    addr=$A517
+    bank=1    addr=$A51E
+    bank=1    addr=$A524
+    bank=1    addr=$A656
+    bank=1    addr=$A669
+    bank=1    addr=$A67C
+    bank=1    addr=$A76C
+    bank=1    addr=$A808
+    bank=1    addr=$A90E
+    bank=1    addr=$A939
+    bank=1    addr=$A9A6
+    bank=1    addr=$AB4A
+    bank=1    addr=$AB5F
+    bank=1    addr=$AB8E
+    bank=1    addr=$AB95
+    bank=1    addr=$AB96
+    bank=1    addr=$ABBE
+    bank=1    addr=$ABCA
+    bank=1    addr=$ABE3
+    bank=1    addr=$ABE4
+    bank=1    addr=$ABE5
+    bank=1    addr=$ABE6
+    bank=1    addr=$ABF7
+    bank=1    addr=$AC03
+    bank=1    addr=$AC09
+    bank=1    addr=$AC0A
+    bank=1    addr=$AC0B
+    bank=1    addr=$AC14
+    bank=1    addr=$AC20
+    bank=1    addr=$AC33
+    bank=1    addr=$AC38
+    bank=1    addr=$AC40
+    bank=1    addr=$AC41
+    bank=1    addr=$AC42
+    bank=1    addr=$93D6
+    bank=1    addr=$9263
+    bank=1    addr=$91CC
+    bank=1    addr=$856A
+    bank=1    addr=$85FE
+    bank=1    addr=$86C6
+    bank=1    addr=$8777
+    bank=1    addr=$8778
+    bank=1    addr=$878F
+    bank=1    addr=$87D3
+    bank=1    addr=$87DE
+    bank=1    addr=$87DF
+    bank=1    addr=$87E0
+    bank=1    addr=$87E1
+    bank=1    addr=$89A2
+    bank=1    addr=$89A3
+    bank=1    addr=$8B11
+    bank=1    addr=$8B1A
+    bank=1    addr=$8B1B
+    bank=1    addr=$8C0D
+    bank=1    addr=$8C0E
+    bank=1    addr=$8C0F
+    bank=1    addr=$8C10
+    bank=1    addr=$8D05
+    bank=1    addr=$8D06
+    bank=1    addr=$8DD5
+    bank=1    addr=$8DD6
+    bank=1    addr=$8DD7
+    bank=1    addr=$8DD8
+    bank=1    addr=$8DF2
+    bank=1    addr=$8DFE
+    bank=1    addr=$8DFF
+    bank=1    addr=$8E00
+    bank=1    addr=$8E01
+    bank=1    addr=$8E04
+    bank=1    addr=$8E09
+    bank=1    addr=$8E0A
+    bank=1    addr=$8E0F
+    bank=1    addr=$8E10
+    bank=1    addr=$8E11
+    bank=1    addr=$8E12
+    bank=1    addr=$8E13
+    bank=1    addr=$8E14
+    bank=1    addr=$8E15
+    bank=1    addr=$8E16
+    bank=1    addr=$8E17
+    bank=1    addr=$8E18
+    bank=1    addr=$8E19
+    bank=1    addr=$8E1A
+    bank=1    addr=$8E1B
+    bank=1    addr=$8E1C
+    bank=1    addr=$8E1D
+    bank=1    addr=$8E1E
+    bank=1    addr=$8E1F
+    bank=1    addr=$8E20
+    bank=1    addr=$8E21
+    bank=1    addr=$8E22
+    bank=1    addr=$8E23
+    bank=1    addr=$8E24
+    bank=1    addr=$8E25
+    bank=1    addr=$8E26
+    bank=1    addr=$8E27
+    bank=1    addr=$8E28
+    bank=1    addr=$8E29
+    bank=1    addr=$8E2A
+    bank=1    addr=$8E2B
+    bank=1    addr=$8E2C
+    bank=1    addr=$8E2D
+    bank=1    addr=$8E2E
+    bank=1    addr=$8E2F
+    bank=1    addr=$8E30
+    bank=1    addr=$8E31
+    bank=1    addr=$8E32
+    bank=1    addr=$8E33
+    bank=1    addr=$8E34
+    bank=1    addr=$8E35
+    bank=1    addr=$8E36
+    bank=1    addr=$8E37
+    bank=1    addr=$8E38
+    bank=1    addr=$8E39
+    bank=1    addr=$8E3A
+    bank=1    addr=$8E3B
+    bank=1    addr=$8E3C
+    bank=1    addr=$8E3D
+    bank=1    addr=$8E3F
+    bank=1    addr=$8E47
+    bank=1    addr=$8E49
+    bank=1    addr=$8E4B
+    bank=1    addr=$8E4D
+    bank=1    addr=$8E52
+    bank=1    addr=$8E54
+    bank=1    addr=$8E56
+    bank=1    addr=$8E58
+    bank=1    addr=$8E5A
+    bank=1    addr=$8E5C
+    bank=1    addr=$8E5D
+    bank=1    addr=$8E5E
+    bank=1    addr=$8E5F
+    bank=1    addr=$8E60
+    bank=1    addr=$8E61
+    bank=1    addr=$8E62
+    bank=1    addr=$8E64
+    bank=1    addr=$8E65
+    bank=1    addr=$8E67
+    bank=1    addr=$8E69
+    bank=1    addr=$8E6B
+    bank=1    addr=$8E70
+    bank=1    addr=$8E71
+    bank=1    addr=$8E72
+    bank=1    addr=$8E73
+    bank=1    addr=$8E74
+    bank=1    addr=$8E75
+    bank=1    addr=$8E76
+    bank=1    addr=$8E77
+    bank=1    addr=$8E78
+    bank=1    addr=$8E79
+    bank=1    addr=$8E7A
+    bank=1    addr=$8E7B
+    bank=1    addr=$8E7C
+    bank=1    addr=$8E7D
+    bank=1    addr=$8E7F
+    bank=1    addr=$8E81
+    bank=1    addr=$8E83
+    bank=1    addr=$8E84
+    bank=1    addr=$8E85
+    bank=1    addr=$8E86
+    bank=1    addr=$8E87
+    bank=1    addr=$8E88
+    bank=1    addr=$8E89
+    bank=1    addr=$8E8B
+    bank=1    addr=$8E8D
+    bank=1    addr=$8E90
+    bank=1    addr=$8E92
+    bank=1    addr=$8E93
+    bank=1    addr=$8E94
+    bank=1    addr=$8E95
+    bank=1    addr=$8E96
+    bank=1    addr=$8E97
+    bank=1    addr=$8E98
+    bank=1    addr=$8E99
+    bank=1    addr=$8E9A
+    bank=1    addr=$8E9B
+    bank=1    addr=$8EA0
+    bank=1    addr=$8EA2
+    bank=1    addr=$8EA3
+    bank=1    addr=$8EB5
+    bank=1    addr=$8EB7
+    bank=1    addr=$8EB9
+    bank=1    addr=$8EBA
+    bank=1    addr=$8EC3
+    bank=1    addr=$8EDF
+    bank=1    addr=$8EE0
+    bank=1    addr=$8EE7
+    bank=1    addr=$8EF0
+    bank=1    addr=$8EF3
+    bank=1    addr=$8EF8
+    bank=1    addr=$8EF9
+    bank=1    addr=$8EFC
+    bank=1    addr=$8EFD
+    bank=1    addr=$8EFF
+    bank=1    addr=$8F00
+    bank=1    addr=$8F01
+    bank=1    addr=$8F02
+    bank=1    addr=$8F08
+    bank=1    addr=$8F09
+    bank=1    addr=$8F0E
+    bank=1    addr=$8F0F
+    bank=1    addr=$8F10
+    bank=1    addr=$8F11
+    bank=1    addr=$8F12
+    bank=1    addr=$8F13
+    bank=1    addr=$8F14
+    bank=1    addr=$8F15
+    bank=1    addr=$8F16
+    bank=1    addr=$8F17
+    bank=1    addr=$8F18
+    bank=1    addr=$8F19
+    bank=1    addr=$8F22
+    bank=1    addr=$8F23
+    bank=1    addr=$8F24
+    bank=1    addr=$8F25
+    bank=1    addr=$8F2B
+    bank=1    addr=$8F2C
+    bank=1    addr=$8F2D
+    bank=1    addr=$8F2E
+    bank=1    addr=$8F31
+    bank=1    addr=$8F32
+    bank=1    addr=$8F38
+    bank=1    addr=$8F39
+    bank=1    addr=$8F3A
+    bank=1    addr=$8F3C
+    bank=1    addr=$8F3D
+    bank=1    addr=$8F46
+    bank=1    addr=$8F47
+    bank=1    addr=$8F48
+    bank=1    addr=$8F4E
+    bank=1    addr=$8F54
+    bank=1    addr=$8F56
+    bank=1    addr=$8F5A
+    bank=1    addr=$8F5C
+    bank=1    addr=$8F5E
+    bank=1    addr=$8F60
+    bank=1    addr=$8F61
+    bank=1    addr=$8F62
+    bank=1    addr=$8F63
+    bank=1    addr=$8F64
+    bank=1    addr=$8F65
+    bank=1    addr=$8F66
+    bank=1    addr=$8F67
+    bank=1    addr=$8F68
+    bank=1    addr=$8F69
+    bank=1    addr=$8F6A
+    bank=1    addr=$8F6B
+    bank=1    addr=$8F6C
+    bank=1    addr=$8F6D
+    bank=1    addr=$8F6E
+    bank=1    addr=$8F6F
+    bank=1    addr=$8F70
+    bank=1    addr=$8F71
+    bank=1    addr=$8F72
+    bank=1    addr=$8F73
+    bank=1    addr=$8F74
+    bank=1    addr=$8F75
+    bank=1    addr=$8F77
+    bank=1    addr=$8F7F
+    bank=1    addr=$8F80
+    bank=1    addr=$8F8D
+    bank=1    addr=$8F93
+    bank=1    addr=$8F94
+    bank=1    addr=$8F95
+    bank=1    addr=$8F96
+    bank=1    addr=$8F99
+    bank=1    addr=$8F9A
+    bank=1    addr=$8F9B
+    bank=1    addr=$8F9C
+    bank=1    addr=$8F9D
+    bank=1    addr=$8F9E
+    bank=1    addr=$8F9F
+    bank=1    addr=$8FA0
+    bank=1    addr=$8FA1
+    bank=1    addr=$8FA2
+    bank=1    addr=$8FA3
+    bank=1    addr=$8FA4
+    bank=1    addr=$8FA5
+    bank=1    addr=$8FA6
+    bank=1    addr=$8FA7
+    bank=1    addr=$8FA8
+    bank=1    addr=$8FA9
+    bank=1    addr=$8FAA
+    bank=1    addr=$8FAB
+    bank=1    addr=$8FAC
+    bank=1    addr=$8FB4
+    bank=1    addr=$8FB5
+    bank=1    addr=$8FB6
+    bank=1    addr=$8FB7
+    bank=1    addr=$8FB8
+    bank=1    addr=$8FB9
+    bank=1    addr=$8FBA
+    bank=1    addr=$8FD1
+    bank=1    addr=$8FD2
+    bank=1    addr=$8FD3
+    bank=1    addr=$8FD4
+    bank=1    addr=$8FD5
+    bank=1    addr=$8FD6
+
+## JMP (\$xxFF) page-wrap erratum sites
+  count: unique=1
+    bank=4    addr=$B235  indirect=$FFFF (hi-byte fetched from $FF00)
+
+## Discovery rejections (deduplicated by (bank, addr))
+  rejected_due_to_illegal_opcode: unique=38423  (listing first 1024)
+    bank=7    addr=$D881
+    bank=7    addr=$C882
+    bank=7    addr=$DE03
+    bank=7    addr=$EAEB
+    bank=7    addr=$E5EC
+    bank=7    addr=$E9E8
+    bank=7    addr=$E3E7
+    bank=7    addr=$ECE0
+    bank=7    addr=$ECE1
+    bank=7    addr=$E2DF
+    bank=7    addr=$ECE2
+    bank=7    addr=$DC89
+    bank=7    addr=$CD36
+    bank=7    addr=$CD07
+    bank=7    addr=$CC07
+    bank=7    addr=$E88B
+    bank=7    addr=$D88C
+    bank=7    addr=$C0BF
+    bank=7    addr=$C2AC
+    bank=7    addr=$C1BF
+    bank=7    addr=$C2AA
+    bank=7    addr=$C3B0
+    bank=7    addr=$C5AA
+    bank=7    addr=$C5AB
+    bank=7    addr=$C7AA
+    bank=7    addr=$E49E
+    bank=7    addr=$F305
+    bank=7    addr=$F333
+    bank=7    addr=$F724
+    bank=7    addr=$CB93
+    bank=7    addr=$F393
+    bank=7    addr=$D395
+    bank=7    addr=$FB95
+    bank=7    addr=$D3A2
+    bank=7    addr=$D3A4
+    bank=7    addr=$D1AB
+    bank=7    addr=$D1B5
+    bank=7    addr=$CBCA
+    bank=7    addr=$CFCE
+    bank=7    addr=$D384
+    bank=7    addr=$D6DE
+    bank=7    addr=$DEDB
+    bank=7    addr=$EEEE
+    bank=7    addr=$F396
+    bank=7    addr=$CABD
+    bank=7    addr=$CACA
+    bank=7    addr=$C3CA
+    bank=7    addr=$C3C3
+    bank=7    addr=$C1E5
+    bank=7    addr=$C0BD
+    bank=7    addr=$C4BF
+    bank=7    addr=$C8C7
+    bank=7    addr=$C9D1
+    bank=7    addr=$D1CD
+    bank=7    addr=$D1CF
+    bank=7    addr=$C9BA
+    bank=7    addr=$CDC9
+    bank=7    addr=$CEC8
+    bank=7    addr=$CFCC
+    bank=7    addr=$CDCD
+    bank=7    addr=$CECC
+    bank=7    addr=$CFC9
+    bank=7    addr=$F99B
+    bank=7    addr=$E99C
+    bank=7    addr=$DE00
+    bank=7    addr=$E1E0
+    bank=7    addr=$CFA0
+    bank=7    addr=$EA4C
+    bank=7    addr=$D650
+    bank=7    addr=$D652
+    bank=7    addr=$EED6
+    bank=7    addr=$F0D6
+    bank=7    addr=$D639
+    bank=7    addr=$E3E3
+    bank=7    addr=$EFA1
+    bank=7    addr=$CFA3
+    bank=7    addr=$E5A4
+    bank=7    addr=$C583
+    bank=7    addr=$F9A8
+    bank=7    addr=$F8DF
+    bank=7    addr=$F9F8
+    bank=7    addr=$F9FD
+    bank=7    addr=$FEFD
+    bank=7    addr=$E0B5
+    bank=7    addr=$F0E5
+    bank=7    addr=$F4F1
+    bank=7    addr=$FAF5
+    bank=7    addr=$FBFA
+    bank=7    addr=$FBFB
+    bank=7    addr=$FFFB
+    bank=7    addr=$E7E6
+    bank=7    addr=$C0C0
+    bank=7    addr=$C9C0
+    bank=7    addr=$D7D5
+    bank=7    addr=$D7D7
+    bank=7    addr=$D1D1
+    bank=7    addr=$D3D3
+    bank=7    addr=$F404
+    bank=7    addr=$FC14
+    bank=7    addr=$F818
+    bank=7    addr=$FFFC
+    bank=7    addr=$C208
+    bank=7    addr=$C71C
+    bank=7    addr=$CEAE
+    bank=7    addr=$D7AE
+    bank=7    addr=$D300
+    bank=7    addr=$F6B0
+    bank=7    addr=$CB0A
+    bank=7    addr=$CB0D
+    bank=7    addr=$CF10
+    bank=7    addr=$C2B3
+    bank=7    addr=$F1B4
+    bank=7    addr=$FAB4
+    bank=7    addr=$F9B5
+    bank=7    addr=$D7B6
+    bank=7    addr=$D0B7
+    bank=7    addr=$EBB7
+    bank=7    addr=$C90A
+    bank=7    addr=$C112
+    bank=7    addr=$C1C1
+    bank=7    addr=$F9B9
+    bank=7    addr=$E938
+    bank=7    addr=$C00B
+    bank=7    addr=$F007
+    bank=7    addr=$F00B
+    bank=7    addr=$F430
+    bank=7    addr=$F1D0
+    bank=7    addr=$C8F4
+    bank=7    addr=$F610
+    bank=7    addr=$FB59
+    bank=7    addr=$D2DB
+    bank=7    addr=$E2E1
+    bank=7    addr=$E2E3
+    bank=7    addr=$D21D
+    bank=7    addr=$EAD2
+    bank=7    addr=$EAEA
+    bank=7    addr=$D4C6
+    bank=7    addr=$C1D6
+    bank=7    addr=$CAC9
+    bank=7    addr=$D1C9
+    bank=7    addr=$E4E2
+    bank=7    addr=$DEDF
+    bank=7    addr=$E0DE
+    bank=7    addr=$E1E2
+    bank=7    addr=$FAC0
+    bank=7    addr=$FDFC
+    bank=7    addr=$FEBF
+    bank=7    addr=$FEE9
+    bank=7    addr=$FEFE
+    bank=7    addr=$FEC2
+    bank=7    addr=$FECC
+    bank=7    addr=$FEC0
+    bank=7    addr=$EFEE
+    bank=7    addr=$F3F2
+    bank=7    addr=$F3F5
+    bank=7    addr=$F3F3
+    bank=7    addr=$F3F1
+    bank=7    addr=$F4F3
+    bank=7    addr=$EAED
+    bank=7    addr=$F8F7
+    bank=7    addr=$C8F9
+    bank=7    addr=$DCC7
+    bank=7    addr=$C6C3
+    bank=7    addr=$CB77
+    bank=7    addr=$C202
+    bank=7    addr=$D1CB
+    bank=7    addr=$C801
+    bank=7    addr=$CECE
+    bank=7    addr=$CBD3
+    bank=7    addr=$E4E0
+    bank=7    addr=$CACC
+    bank=7    addr=$FB5E
+    bank=7    addr=$FB6C
+    bank=7    addr=$E4E4
+    bank=7    addr=$CDCF
+    bank=7    addr=$CB04
+    bank=7    addr=$E3CB
+    bank=7    addr=$C0E4
+    bank=7    addr=$E878
+    bank=7    addr=$EE78
+    bank=7    addr=$EDF0
+    bank=7    addr=$EEED
+    bank=7    addr=$EF72
+    bank=7    addr=$F954
+    bank=7    addr=$F976
+    bank=7    addr=$E9F9
+    bank=7    addr=$F9E9
+    bank=7    addr=$F975
+    bank=7    addr=$F940
+    bank=7    addr=$F772
+    bank=7    addr=$F8F8
+    bank=7    addr=$FA74
+    bank=7    addr=$FAFA
+    bank=7    addr=$F4F5
+    bank=7    addr=$F4F6
+    bank=7    addr=$C876
+    bank=7    addr=$FFA5
+    bank=7    addr=$FDFF
+    bank=7    addr=$F7FD
+    bank=7    addr=$EA55
+    bank=7    addr=$F555
+    bank=7    addr=$F755
+    bank=7    addr=$FB7F
+    bank=7    addr=$D595
+    bank=7    addr=$F3A9
+    bank=7    addr=$FA55
+    bank=7    addr=$FF00
+    bank=7    addr=$FF05
+    bank=7    addr=$FAFF
+    bank=7    addr=$FFFA
+    bank=7    addr=$FAAA
+    bank=7    addr=$CC99
+    bank=7    addr=$EE00
+    bank=7    addr=$FC9F
+    bank=7    addr=$D4D3
+    bank=7    addr=$EEEF
+    bank=7    addr=$FAFB
+    bank=7    addr=$FDDA
+    bank=7    addr=$E0F7
+    bank=7    addr=$EAE4
+    bank=7    addr=$FFFD
+    bank=7    addr=$FD56
+    bank=7    addr=$FC68
+    bank=7    addr=$FD15
+    bank=7    addr=$F8FD
+    bank=7    addr=$EEF8
+    bank=7    addr=$FD05
+    bank=7    addr=$FD0C
+    bank=7    addr=$FD17
+    bank=7    addr=$FC01
+    bank=7    addr=$FC03
+    bank=7    addr=$FC05
+    bank=7    addr=$FCFE
+    bank=7    addr=$FEFC
+    bank=7    addr=$D298
+    bank=7    addr=$F8BB
+    bank=7    addr=$FAF9
+    bank=7    addr=$F8EB
+    bank=7    addr=$FEFF
+    bank=7    addr=$FD9C
+    bank=7    addr=$FD9E
+    bank=7    addr=$E835
+    bank=7    addr=$EAE9
+    bank=7    addr=$FC36
+    bank=7    addr=$FC46
+    bank=7    addr=$F801
+    bank=7    addr=$F901
+    bank=7    addr=$FC83
+    bank=7    addr=$D7AF
+    bank=7    addr=$FDBF
+    bank=7    addr=$FC0C
+    bank=7    addr=$FC25
+    bank=7    addr=$FC3D
+    bank=7    addr=$FC65
+    bank=7    addr=$FC4A
+    bank=7    addr=$FC4C
+    bank=7    addr=$F8BC
+    bank=7    addr=$FA5A
+    bank=7    addr=$FC41
+    bank=7    addr=$F410
+    bank=7    addr=$E8A9
+    bank=7    addr=$EFA9
+    bank=7    addr=$D399
+    bank=7    addr=$DB9D
+    bank=7    addr=$FA10
+    bank=7    addr=$C8A9
+    bank=7    addr=$F2DD
+    bank=7    addr=$D085
+    bank=7    addr=$DD0C
+    bank=7    addr=$E881
+    bank=7    addr=$F9D0
+    bank=7    addr=$F004
+    bank=7    addr=$F00A
+    bank=7    addr=$C040
+    bank=7    addr=$CA18
+    bank=7    addr=$F03C
+    bank=7    addr=$C916
+    bank=7    addr=$F0F0
+    bank=7    addr=$F010
+    bank=7    addr=$F000
+    bank=7    addr=$FB4C
+    bank=7    addr=$FAD0
+    bank=7    addr=$C803
+    bank=7    addr=$DE07
+    bank=7    addr=$C918
+    bank=7    addr=$CA02
+    bank=7    addr=$F0F5
+    bank=7    addr=$CAA8
+    bank=7    addr=$FEC9
+    bank=7    addr=$C888
+    bank=7    addr=$CD4A
+    bank=7    addr=$E741
+    bank=7    addr=$E626
+    bank=7    addr=$FA44
+    bank=7    addr=$E14A
+    bank=7    addr=$DE2D
+    bank=7    addr=$EE2E
+    bank=7    addr=$F411
+    bank=7    addr=$C129
+    bank=7    addr=$C449
+    bank=7    addr=$F86A
+    bank=7    addr=$F90F
+    bank=7    addr=$FA2F
+    bank=7    addr=$DE4E
+    bank=7    addr=$FB4F
+    bank=7    addr=$E2A4
+    bank=7    addr=$C79C
+    bank=7    addr=$FE55
+    bank=7    addr=$D220
+    bank=7    addr=$D920
+    bank=7    addr=$FED4
+    bank=7    addr=$FED6
+    bank=7    addr=$DE22
+    bank=7    addr=$FEDC
+    bank=7    addr=$C023
+    bank=7    addr=$C923
+    bank=7    addr=$FFC9
+    bank=7    addr=$C423
+    bank=7    addr=$FED3
+    bank=7    addr=$C421
+    bank=7    addr=$D3E4
+    bank=7    addr=$FE9B
+    bank=7    addr=$D723
+    bank=7    addr=$F8FC
+    bank=7    addr=$FF02
+    bank=7    addr=$F84C
+    bank=7    addr=$F993
+    bank=7    addr=$F292
+    bank=7    addr=$EB92
+    bank=7    addr=$FB94
+    bank=7    addr=$C985
+    bank=7    addr=$F00F
+    bank=7    addr=$CE4C
+    bank=7    addr=$F06F
+    bank=7    addr=$F929
+    bank=7    addr=$F080
+    bank=7    addr=$F029
+    bank=7    addr=$F729
+    bank=7    addr=$D0C1
+    bank=7    addr=$CC4C
+    bank=7    addr=$C90F
+    bank=7    addr=$C991
+    bank=7    addr=$D09E
+    bank=7    addr=$D9A5
+    bank=7    addr=$F08E
+    bank=7    addr=$F066
+    bank=7    addr=$D0EB
+    bank=7    addr=$F002
+    bank=7    addr=$F00E
+    bank=7    addr=$D018
+    bank=7    addr=$F03B
+    bank=7    addr=$EE03
+    bank=7    addr=$C9DE
+    bank=7    addr=$C029
+    bank=7    addr=$C95E
+    bank=7    addr=$F005
+    bank=7    addr=$F00C
+    bank=7    addr=$E1C5
+    bank=7    addr=$C2D0
+    bank=7    addr=$E0A5
+    bank=7    addr=$D885
+    bank=7    addr=$D785
+    bank=7    addr=$D685
+    bank=7    addr=$DB85
+    bank=7    addr=$C59F
+    bank=7    addr=$CA9F
+    bank=7    addr=$F89F
+    bank=7    addr=$F8F0
+    bank=7    addr=$F9FC
+    bank=7    addr=$FAF2
+    bank=7    addr=$F402
+    bank=7    addr=$F3F4
+    bank=7    addr=$FBF3
+    bank=7    addr=$F0E9
+    bank=7    addr=$F9F1
+    bank=7    addr=$FA03
+    bank=7    addr=$F407
+    bank=7    addr=$FEF6
+    bank=7    addr=$F3EE
+    bank=7    addr=$D781
+    bank=7    addr=$DB87
+    bank=7    addr=$F587
+    bank=7    addr=$FA88
+    bank=7    addr=$DE89
+    bank=7    addr=$F98A
+    bank=7    addr=$D48B
+    bank=7    addr=$E967
+    bank=7    addr=$E148
+    bank=7    addr=$FA8E
+    bank=7    addr=$CB8F
+    bank=7    addr=$E88F
+    bank=7    addr=$F92A
+    bank=7    addr=$F9FF
+    bank=7    addr=$E4FF
+    bank=7    addr=$F4FF
+    bank=7    addr=$FB92
+    bank=7    addr=$F793
+    bank=7    addr=$D996
+    bank=7    addr=$F397
+    bank=7    addr=$F898
+    bank=7    addr=$CC9B
+    bank=7    addr=$FA9E
+    bank=7    addr=$FFBA
+    bank=7    addr=$FFB2
+    bank=7    addr=$C30B
+    bank=7    addr=$D90F
+    bank=7    addr=$EE0F
+    bank=7    addr=$ED0B
+    bank=7    addr=$DE5B
+    bank=7    addr=$F403
+    bank=7    addr=$DF5B
+    bank=7    addr=$F503
+    bank=7    addr=$F707
+    bank=7    addr=$F90B
+    bank=7    addr=$FFB5
+    bank=7    addr=$EAA2
+    bank=7    addr=$C262
+    bank=7    addr=$C442
+    bank=7    addr=$C542
+    bank=7    addr=$C972
+    bank=7    addr=$C20A
+    bank=7    addr=$CC0E
+    bank=7    addr=$D542
+    bank=7    addr=$DBFF
+    bank=7    addr=$DC0A
+    bank=7    addr=$DE0E
+    bank=7    addr=$C307
+    bank=7    addr=$C403
+    bank=7    addr=$D80E
+    bank=7    addr=$D30E
+    bank=7    addr=$D40A
+    bank=7    addr=$EF3A
+    bank=7    addr=$EA3A
+    bank=7    addr=$E12E
+    bank=7    addr=$FA0E
+    bank=7    addr=$F90A
+    bank=7    addr=$FB0E
+    bank=7    addr=$F606
+    bank=7    addr=$FC0A
+    bank=7    addr=$E402
+    bank=7    addr=$DDFF
+    bank=7    addr=$E50E
+    bank=7    addr=$C45A
+    bank=7    addr=$D05B
+    bank=7    addr=$D45B
+    bank=7    addr=$DE0B
+    bank=7    addr=$DD07
+    bank=7    addr=$F502
+    bank=7    addr=$FA02
+    bank=7    addr=$FA06
+    bank=7    addr=$FA0A
+    bank=7    addr=$EA0A
+    bank=7    addr=$EE0A
+    bank=7    addr=$E95A
+    bank=7    addr=$FB06
+    bank=7    addr=$CB0B
+    bank=7    addr=$F40F
+    bank=7    addr=$F8FF
+    bank=7    addr=$ED01
+    bank=7    addr=$EF06
+    bank=7    addr=$FA05
+    bank=7    addr=$C008
+    bank=7    addr=$D10B
+    bank=7    addr=$D302
+    bank=7    addr=$D60A
+    bank=7    addr=$D70A
+    bank=7    addr=$D806
+    bank=7    addr=$DB0A
+    bank=7    addr=$DE0A
+    bank=7    addr=$F506
+    bank=7    addr=$E68E
+    bank=7    addr=$DB02
+    bank=7    addr=$D48F
+    bank=7    addr=$D68B
+    bank=7    addr=$DE02
+    bank=7    addr=$D78B
+    bank=7    addr=$FB02
+    bank=7    addr=$F58E
+    bank=7    addr=$F78A
+    bank=7    addr=$F38A
+    bank=7    addr=$F902
+    bank=7    addr=$D507
+    bank=7    addr=$E303
+    bank=7    addr=$F207
+    bank=7    addr=$EA0F
+    bank=7    addr=$DD0E
+    bank=7    addr=$F66B
+    bank=7    addr=$ED07
+    bank=7    addr=$C206
+    bank=7    addr=$F60A
+    bank=7    addr=$E047
+    bank=7    addr=$F27B
+    bank=7    addr=$F40B
+    bank=7    addr=$C00E
+    bank=7    addr=$CA06
+    bank=7    addr=$C18A
+    bank=7    addr=$C65A
+    bank=7    addr=$CC03
+    bank=7    addr=$CD02
+    bank=7    addr=$E50A
+    bank=7    addr=$F40A
+    bank=7    addr=$F60E
+    bank=7    addr=$E607
+    bank=7    addr=$FB0A
+    bank=7    addr=$DE0F
+    bank=7    addr=$F807
+    bank=7    addr=$FA0B
+    bank=7    addr=$F907
+    bank=7    addr=$FB0B
+    bank=7    addr=$F30F
+    bank=7    addr=$D80A
+    bank=7    addr=$ED03
+    bank=7    addr=$F803
+    bank=7    addr=$D7A0
+    bank=7    addr=$E8A0
+    bank=7    addr=$F9A0
+    bank=7    addr=$CFA2
+    bank=7    addr=$D2A2
+    bank=7    addr=$EEA2
+    bank=7    addr=$FEA2
+    bank=7    addr=$C110
+    bank=7    addr=$D284
+    bank=7    addr=$D286
+    bank=7    addr=$D386
+    bank=7    addr=$D586
+    bank=7    addr=$D801
+    bank=7    addr=$CDA3
+    bank=7    addr=$FAA3
+    bank=7    addr=$D2A4
+    bank=7    addr=$F808
+    bank=7    addr=$F40D
+    bank=7    addr=$D810
+    bank=7    addr=$D80C
+    bank=7    addr=$FBE0
+    bank=7    addr=$F802
+    bank=7    addr=$F9A7
+    bank=7    addr=$F586
+    bank=7    addr=$CDA6
+    bank=7    addr=$DEA6
+    bank=7    addr=$FAA6
+    bank=7    addr=$F4A7
+    bank=7    addr=$DA59
+    bank=7    addr=$F8A8
+    bank=7    addr=$FF03
+    bank=7    addr=$D9AA
+    bank=7    addr=$CF91
+    bank=7    addr=$D2AC
+    bank=7    addr=$C3AE
+    bank=7    addr=$F7B1
+    bank=7    addr=$E3BB
+    bank=7    addr=$F9BC
+    bank=7    addr=$F9AD
+    bank=7    addr=$FAB8
+    bank=7    addr=$E6AD
+    bank=7    addr=$DB4C
+    bank=7    addr=$CCAE
+    bank=7    addr=$E6AF
+    bank=7    addr=$E0A9
+    bank=7    addr=$EDC0
+    bank=7    addr=$FFA2
+    bank=7    addr=$EFA5
+    bank=7    addr=$EFA0
+    bank=7    addr=$FDA2
+    bank=7    addr=$D0B9
+    bank=7    addr=$F8A9
+    bank=7    addr=$FDA0
+    bank=7    addr=$F8A2
+    bank=7    addr=$D1A5
+    bank=7    addr=$EF90
+    bank=7    addr=$CDBA
+    bank=7    addr=$CABB
+    bank=7    addr=$F040
+    bank=7    addr=$DBC0
+    bank=7    addr=$CDBC
+    bank=7    addr=$FCA2
+    bank=7    addr=$F030
+    bank=7    addr=$F4EC
+    bank=7    addr=$FBF4
+    bank=7    addr=$FEFB
+    bank=7    addr=$F4FB
+    bank=7    addr=$C5D4
+    bank=7    addr=$CE85
+    bank=7    addr=$FDD0
+    bank=7    addr=$EF29
+    bank=7    addr=$C880
+    bank=7    addr=$FB10
+    bank=7    addr=$CA04
+    bank=7    addr=$EE88
+    bank=7    addr=$FCF0
+    bank=7    addr=$E8F5
+    bank=7    addr=$F8D0
+    bank=7    addr=$FBF0
+    bank=7    addr=$EEEC
+    bank=7    addr=$F011
+    bank=7    addr=$E4E8
+    bank=7    addr=$E5D0
+    bank=7    addr=$CE0C
+    bank=7    addr=$C998
+    bank=7    addr=$F8B9
+    bank=7    addr=$C90C
+    bank=7    addr=$D05D
+    bank=7    addr=$F910
+    bank=7    addr=$EEDF
+    bank=7    addr=$EE0E
+    bank=7    addr=$F7EE
+    bank=7    addr=$F88D
+    bank=7    addr=$F98D
+    bank=7    addr=$F8AD
+    bank=7    addr=$F8CE
+    bank=7    addr=$F9CE
+    bank=7    addr=$F78D
+    bank=7    addr=$E384
+    bank=7    addr=$F591
+    bank=7    addr=$F991
+    bank=7    addr=$CB08
+    bank=7    addr=$C00A
+    bank=7    addr=$D808
+    bank=7    addr=$CE94
+    bank=7    addr=$F997
+    bank=7    addr=$F399
+    bank=7    addr=$C498
+    bank=7    addr=$D998
+    bank=7    addr=$FEBB
+    bank=7    addr=$FEBE
+    bank=7    addr=$D0A2
+    bank=7    addr=$CFAD
+    bank=7    addr=$D7BA
+    bank=7    addr=$D39B
+    bank=7    addr=$D20E
+    bank=7    addr=$C047
+    bank=7    addr=$C447
+    bank=7    addr=$D7A2
+    bank=7    addr=$DE47
+    bank=7    addr=$FF01
+    bank=7    addr=$CDFF
+    bank=7    addr=$F3FF
+    bank=7    addr=$CD50
+    bank=7    addr=$C7FF
+    bank=7    addr=$CE36
+    bank=7    addr=$F060
+    bank=7    addr=$F400
+    bank=7    addr=$CFFF
+    bank=7    addr=$E076
+    bank=7    addr=$C91A
+    bank=7    addr=$C911
+    bank=7    addr=$CDA5
+    bank=7    addr=$D01C
+    bank=7    addr=$C59A
+    bank=7    addr=$D01A
+    bank=7    addr=$DF29
+    bank=7    addr=$F928
+    bank=7    addr=$EE30
+    bank=7    addr=$FB30
+    bank=7    addr=$D74C
+    bank=7    addr=$EE11
+    bank=7    addr=$ECAB
+    bank=7    addr=$FAB3
+    bank=7    addr=$EDB6
+    bank=7    addr=$F7B6
+    bank=7    addr=$CDB8
+    bank=7    addr=$EFB8
+    bank=7    addr=$F9B8
+    bank=7    addr=$E5B9
+    bank=7    addr=$D788
+    bank=7    addr=$D725
+    bank=7    addr=$D77C
+    bank=7    addr=$E4E6
+    bank=7    addr=$D2C6
+    bank=7    addr=$CDCB
+    bank=7    addr=$CFCD
+    bank=7    addr=$D4D7
+    bank=7    addr=$E78A
+    bank=7    addr=$E9EA
+    bank=7    addr=$E5E6
+    bank=7    addr=$EE56
+    bank=7    addr=$F044
+    bank=7    addr=$F33F
+    bank=7    addr=$F35C
+    bank=7    addr=$FE6B
+    bank=7    addr=$F29C
+    bank=7    addr=$EA6C
+    bank=7    addr=$F86B
+    bank=7    addr=$FEED
+    bank=7    addr=$EEFE
+    bank=7    addr=$FEEF
+    bank=7    addr=$FEE2
+    bank=7    addr=$FEF9
+    bank=7    addr=$FAFE
+    bank=7    addr=$F3FE
+    bank=7    addr=$DEDD
+    bank=7    addr=$C317
+    bank=7    addr=$FC85
+    bank=7    addr=$E0B7
+    bank=7    addr=$FCE2
+    bank=7    addr=$F0E7
+    bank=7    addr=$F8EF
+    bank=7    addr=$FED5
+    bank=7    addr=$FEDF
+    bank=7    addr=$F4C5
+    bank=7    addr=$FEF4
+    bank=7    addr=$FCA4
+    bank=7    addr=$C4BB
+    bank=7    addr=$EE57
+    bank=7    addr=$FE57
+    bank=7    addr=$F25F
+    bank=7    addr=$F0F2
+    bank=7    addr=$F876
+    bank=7    addr=$F7EA
+    bank=7    addr=$EEF1
+    bank=7    addr=$D4D5
+    bank=7    addr=$D4D9
+    bank=7    addr=$D6FC
+    bank=7    addr=$EFF4
+    bank=7    addr=$EED8
+    bank=7    addr=$FCEE
+    bank=7    addr=$F4FC
+    bank=7    addr=$DB51
+    bank=7    addr=$D9A7
+    bank=7    addr=$FD5D
+    bank=7    addr=$E231
+    bank=7    addr=$FC6A
+    bank=7    addr=$FA61
+    bank=7    addr=$F9FA
+    bank=7    addr=$FB57
+    bank=7    addr=$F8FA
+    bank=7    addr=$ED57
+    bank=7    addr=$E857
+    bank=7    addr=$F9E8
+    bank=7    addr=$E6FD
+    bank=7    addr=$E0E2
+    bank=7    addr=$FE67
+    bank=7    addr=$FC77
+    bank=7    addr=$FD13
+    bank=7    addr=$FE39
+    bank=7    addr=$C6E1
+    bank=7    addr=$EFBE
+    bank=7    addr=$F0DF
+    bank=7    addr=$F8F3
+    bank=7    addr=$FBFC
+    bank=7    addr=$FC38
+    bank=7    addr=$D2FC
+    bank=7    addr=$CBFC
+    bank=7    addr=$D8CF
+    bank=7    addr=$FD5F
+    bank=7    addr=$D0C5
+    bank=7    addr=$C1E1
+    bank=7    addr=$E1C1
+    bank=7    addr=$C1C3
+    bank=7    addr=$D7C0
+    bank=7    addr=$CCD7
+    bank=7    addr=$CFC6
+    bank=7    addr=$E1CF
+    bank=7    addr=$DBC6
+    bank=7    addr=$E1DB
+    bank=7    addr=$C7E1
+    bank=7    addr=$D8E1
+    bank=7    addr=$CFD1
+    bank=7    addr=$D3CF
+    bank=7    addr=$D9D3
+    bank=7    addr=$C6DA
+    bank=7    addr=$DEC6
+    bank=7    addr=$C6DE
+    bank=7    addr=$FDCE
+    bank=7    addr=$CFFD
+    bank=7    addr=$FDE8
+    bank=7    addr=$EEEB
+    bank=7    addr=$FDFA
+    bank=7    addr=$DEFD
+    bank=7    addr=$F1FD
+    bank=7    addr=$F3FD
+    bank=7    addr=$F9DB
+    bank=7    addr=$FBBF
+    bank=7    addr=$FC43
+    bank=7    addr=$F599
+    bank=7    addr=$EFFE
+    bank=7    addr=$FBEF
+    bank=7    addr=$EFAE
+    bank=7    addr=$D3E8
+    bank=7    addr=$D4DD
+    bank=7    addr=$DEBF
+    bank=7    addr=$F9A1
+    bank=7    addr=$E17D
+    bank=7    addr=$E7E4
+    bank=7    addr=$E2A6
+    bank=7    addr=$D290
+    bank=7    addr=$D790
+    bank=7    addr=$FF93
+    bank=7    addr=$DA6B
+    bank=7    addr=$EE6B
+    bank=7    addr=$EA4F
+    bank=7    addr=$ED6B
+    bank=7    addr=$F91E
+    bank=7    addr=$EAFA
+    bank=7    addr=$EAE0
+    bank=7    addr=$F4EA
+    bank=7    addr=$E7B3
+    bank=7    addr=$F4E7
+    bank=7    addr=$F6C2
+    bank=7    addr=$C4A8
+    bank=7    addr=$E0C4
+    bank=7    addr=$EAE2
+    bank=7    addr=$EFE0
+    bank=7    addr=$F986
+    bank=7    addr=$F8C7
+    bank=7    addr=$C7BA
+    bank=7    addr=$C493
+    bank=7    addr=$FEF1
+    bank=7    addr=$F5E1
+    bank=7    addr=$DBC8
+    bank=7    addr=$C2E8
+    bank=7    addr=$EB9C
+    bank=7    addr=$F3EF
+    bank=7    addr=$FEF3
+    bank=7    addr=$D280
+    bank=7    addr=$C315
+    bank=7    addr=$C204
+    bank=7    addr=$C353
+    bank=7    addr=$C254
+    bank=7    addr=$C355
+    bank=7    addr=$C357
+    bank=7    addr=$C450
+    bank=7    addr=$C452
+    bank=7    addr=$EF02
+    bank=7    addr=$C26C
+    bank=7    addr=$C36D
+    bank=7    addr=$C36F
+    bank=7    addr=$C359
+    bank=7    addr=$C41D
+    bank=7    addr=$C41F
+    bank=7    addr=$C4BD
+    bank=7    addr=$F2FF
+    bank=7    addr=$F303
+    bank=7    addr=$F904
+    bank=7    addr=$FA01
+    bank=7    addr=$FB01
+    bank=7    addr=$C700
+    bank=7    addr=$CE02
+    bank=7    addr=$FB03
+    bank=7    addr=$C243
+    bank=7    addr=$C146
+    bank=7    addr=$C14A
+    bank=7    addr=$C24B
+    bank=7    addr=$C451
+    bank=7    addr=$C260
+    bank=7    addr=$C45E
+    bank=7    addr=$C16A
+    bank=7    addr=$C376
+    bank=7    addr=$C5BE
+    bank=7    addr=$C3BE
+    bank=7    addr=$C2A7
+    bank=7    addr=$C599
+    bank=7    addr=$C491
+    bank=7    addr=$C195
+    bank=7    addr=$C585
+    bank=7    addr=$C22E
+    bank=7    addr=$C154
+    bank=7    addr=$C459
+    bank=7    addr=$C45B
+    bank=7    addr=$C372
+    bank=7    addr=$C44C
+    bank=7    addr=$C46E
+    bank=7    addr=$C468
+    bank=7    addr=$C578
+    bank=7    addr=$C550
+    bank=7    addr=$C2B1
+    bank=7    addr=$C263
+    bank=7    addr=$C1B1
+    bank=7    addr=$C1B6
+    bank=7    addr=$C2EA
+    bank=7    addr=$E6FF
+    bank=7    addr=$CC9D
+    bank=7    addr=$CC9F
+    bank=7    addr=$DB03
+    bank=7    addr=$D743
+    bank=7    addr=$CCF6
+    bank=7    addr=$F800
+    bank=7    addr=$F9B6
+    bank=7    addr=$C716
+    bank=7    addr=$C1E8
+    bank=7    addr=$EA45
+    bank=7    addr=$C1E9
+    bank=7    addr=$C0EA
+    bank=7    addr=$C1EB
+    bank=7    addr=$C309
+    bank=7    addr=$C430
+    bank=7    addr=$C320
+    bank=7    addr=$DF04
+    bank=7    addr=$C454
+    bank=7    addr=$C36B
+    bank=7    addr=$C57F
+    bank=7    addr=$F401
+    bank=7    addr=$C42E
+    bank=7    addr=$C1DD
+    bank=7    addr=$C1DE
+    bank=7    addr=$E301
+    bank=7    addr=$C1E6
+    bank=7    addr=$C5BC
+    bank=7    addr=$C1EC
+    bank=7    addr=$C2ED
+    bank=7    addr=$C1AC
+    bank=7    addr=$C441
+    bank=7    addr=$C241
+    bank=7    addr=$CC43
+    bank=7    addr=$CD43
+    bank=7    addr=$F239
+    bank=7    addr=$C04A
+    bank=7    addr=$C02C
+    bank=7    addr=$C00D
+    bank=7    addr=$ECE8
+    bank=7    addr=$DE28
+    bank=7    addr=$F385
+    bank=7    addr=$DEF4
+    bank=7    addr=$FA85
+    bank=7    addr=$DE0D
+    bank=7    addr=$F265
+    bank=7    addr=$FA86
+    bank=7    addr=$F505
+    bank=7    addr=$F984
+    bank=7    addr=$F785
+    bank=7    addr=$F9A4
+    bank=7    addr=$CCBD
+    bank=7    addr=$F985
+    bank=7    addr=$F9E5
+    bank=7    addr=$F705
+    bank=7    addr=$F8C5
+    bank=7    addr=$FB85
+    bank=7    addr=$C586
+    bank=7    addr=$EA86
+    bank=7    addr=$FD87
+    bank=7    addr=$F905
+    bank=7    addr=$C8F7
+    bank=7    addr=$F291
+    bank=7    addr=$F784
+    bank=7    addr=$FBD0
+    bank=7    addr=$FBA9
+    bank=7    addr=$F804
+    bank=7    addr=$F79B
+    bank=7    addr=$F98C
+    bank=7    addr=$D78D
+    bank=7    addr=$EB8D
+    bank=7    addr=$F78E
+    bank=7    addr=$F98F
+    bank=7    addr=$F990
+    bank=7    addr=$FA92
+    bank=7    addr=$D294
+    bank=7    addr=$E3C0
+    bank=7    addr=$F2A1
+    bank=7    addr=$F230
+    bank=7    addr=$E035
+    bank=7    addr=$F296
+    bank=7    addr=$F232
+    bank=7    addr=$EA30
+    bank=7    addr=$E50C
+    bank=7    addr=$E096
+    bank=7    addr=$E998
+    bank=7    addr=$F1A0
+    bank=7    addr=$F906
+    bank=7    addr=$E840
+    bank=7    addr=$F89B
+    bank=7    addr=$F8EC
+    bank=7    addr=$EB9B
+    bank=7    addr=$F8A0
+    bank=7    addr=$E9EC
+    bank=7    addr=$FAA0
+    bank=7    addr=$EAEC
+    bank=7    addr=$F0A0
+    bank=7    addr=$F7E9
+    bank=7    addr=$E142
+    bank=7    addr=$EA37
+    bank=7    addr=$E09B
+    bank=7    addr=$E9A0
+    bank=7    addr=$F89D
+    bank=7    addr=$E93D
+    bank=7    addr=$EA32
+    bank=7    addr=$EA40
+    bank=7    addr=$ED30
+    bank=7    addr=$F33E
+    bank=7    addr=$F427
+    bank=7    addr=$F329
+    bank=7    addr=$F332
+    bank=7    addr=$EA34
+    bank=7    addr=$E310
+    bank=7    addr=$F1A2
+    bank=7    addr=$EA39
+    bank=7    addr=$E9A4
+    bank=7    addr=$E830
+    bank=7    addr=$F8A5
+    bank=7    addr=$F903
+    bank=7    addr=$F302
+    bank=7    addr=$E140
+    bank=7    addr=$E9A6
+    bank=7    addr=$E1A6
+    bank=7    addr=$EB06
+    bank=7    addr=$EA42
+    bank=7    addr=$F8A7
+    bank=7    addr=$F408
+    bank=7    addr=$FAA1
+    bank=7    addr=$E9A8
+    bank=7    addr=$E3A8
+    bank=7    addr=$FAF3
+    bank=7    addr=$F9F3
+    bank=7    addr=$EB08
+    bank=7    addr=$F9F4
+    bank=7    addr=$DE05
+    bank=7    addr=$F1AB
+    bank=7    addr=$F8F4
+    bank=7    addr=$F900
+    bank=7    addr=$EB04
+    bank=7    addr=$F0EC
+    bank=7    addr=$EB2A
+    bank=7    addr=$E831
+    bank=7    addr=$CD05
+    bank=7    addr=$EB28
+    bank=7    addr=$DDE8
+    bank=7    addr=$E9B3
+    bank=7    addr=$F1B3
+    bank=7    addr=$F7E8
+    bank=7    addr=$EF04
+    bank=7    addr=$E132
+    bank=7    addr=$E284
+    bank=7    addr=$E0B3
+    bank=7    addr=$EB30
+    bank=7    addr=$E033
+    bank=7    addr=$F702
+  rejected_due_to_brk_at_entry: unique=2046  (listing first 1024)
+    bank=7    addr=$E080
+    bank=7    addr=$EBE7
+    bank=7    addr=$C28E
+    bank=7    addr=$C2A9
+    bank=7    addr=$C6AC
+    bank=7    addr=$DB20
+    bank=7    addr=$DB92
+    bank=7    addr=$C7C6
+    bank=7    addr=$C4CD
+    bank=7    addr=$C2BD
+    bank=7    addr=$D184
+    bank=7    addr=$D9DE
+    bank=7    addr=$D9D9
+    bank=7    addr=$C4E5
+    bank=7    addr=$D63F
+    bank=7    addr=$F1D6
+    bank=7    addr=$E24C
+    bank=7    addr=$E34D
+    bank=7    addr=$DFA2
+    bank=7    addr=$D642
+    bank=7    addr=$CA63
+    bank=7    addr=$CA58
+    bank=7    addr=$D0B1
+    bank=7    addr=$D200
+    bank=7    addr=$CDB4
+    bank=7    addr=$DEB5
+    bank=7    addr=$DDDC
+    bank=7    addr=$E0D2
+    bank=7    addr=$C2C1
+    bank=7    addr=$EEC0
+    bank=7    addr=$E221
+    bank=7    addr=$C7E2
+    bank=7    addr=$C8DB
+    bank=7    addr=$C8E7
+    bank=7    addr=$C501
+    bank=7    addr=$CAC7
+    bank=7    addr=$C8B4
+    bank=7    addr=$C867
+    bank=7    addr=$FFAA
+    bank=7    addr=$FFAF
+    bank=7    addr=$FFF5
+    bank=7    addr=$FAAF
+    bank=7    addr=$D5FF
+    bank=7    addr=$D5D1
+    bank=7    addr=$E0E7
+    bank=7    addr=$FD23
+    bank=7    addr=$FD44
+    bank=7    addr=$FC2F
+    bank=7    addr=$FC3A
+    bank=7    addr=$FE4C
+    bank=7    addr=$FDFE
+    bank=7    addr=$C7CF
+    bank=7    addr=$FCAA
+    bank=7    addr=$FD30
+    bank=7    addr=$FD4D
+    bank=7    addr=$FC80
+    bank=7    addr=$FC07
+    bank=7    addr=$FCA1
+    bank=7    addr=$D4BD
+    bank=7    addr=$D5D6
+    bank=7    addr=$F2F0
+    bank=7    addr=$FC12
+    bank=7    addr=$FC6C
+    bank=7    addr=$FC6E
+    bank=7    addr=$DC41
+    bank=7    addr=$E2D0
+    bank=7    addr=$F6D0
+    bank=7    addr=$C820
+    bank=7    addr=$EB4C
+    bank=7    addr=$D006
+    bank=7    addr=$F9F0
+    bank=7    addr=$F820
+    bank=7    addr=$EB0C
+    bank=7    addr=$D421
+    bank=7    addr=$C921
+    bank=7    addr=$E321
+    bank=7    addr=$D001
+    bank=7    addr=$D084
+    bank=7    addr=$D00E
+    bank=7    addr=$DE99
+    bank=7    addr=$FFF7
+    bank=7    addr=$CB82
+    bank=7    addr=$C783
+    bank=7    addr=$CA84
+    bank=7    addr=$D114
+    bank=7    addr=$C192
+    bank=7    addr=$ED98
+    bank=7    addr=$C40B
+    bank=7    addr=$F80B
+    bank=7    addr=$FA0F
+    bank=7    addr=$DB06
+    bank=7    addr=$FFDF
+    bank=7    addr=$FFB7
+    bank=7    addr=$CA0A
+    bank=7    addr=$E40E
+    bank=7    addr=$C55A
+    bank=7    addr=$FFDA
+    bank=7    addr=$E202
+    bank=7    addr=$FFBF
+    bank=7    addr=$EA02
+    bank=7    addr=$E20E
+    bank=7    addr=$E30E
+    bank=7    addr=$E40A
+    bank=7    addr=$FFE6
+    bank=7    addr=$D28E
+    bank=7    addr=$E204
+    bank=7    addr=$D60F
+    bank=7    addr=$D406
+    bank=7    addr=$DF02
+    bank=7    addr=$E206
+    bank=7    addr=$FFF9
+    bank=7    addr=$E90A
+    bank=7    addr=$EE07
+    bank=7    addr=$CD8F
+    bank=7    addr=$E203
+    bank=7    addr=$FA4B
+    bank=7    addr=$F847
+    bank=7    addr=$D103
+    bank=7    addr=$E207
+    bank=7    addr=$E307
+    bank=7    addr=$FFF3
+    bank=7    addr=$F70F
+    bank=7    addr=$E48B
+    bank=7    addr=$C2A2
+    bank=7    addr=$D708
+    bank=7    addr=$D584
+    bank=7    addr=$CB01
+    bank=7    addr=$FA04
+    bank=7    addr=$F810
+    bank=7    addr=$F604
+    bank=7    addr=$E814
+    bank=7    addr=$F80C
+    bank=7    addr=$FF9D
+    bank=7    addr=$F5AD
+    bank=7    addr=$E4B3
+    bank=7    addr=$C8BF
+    bank=7    addr=$E8B7
+    bank=7    addr=$D033
+    bank=7    addr=$CAB5
+    bank=7    addr=$FAB9
+    bank=7    addr=$ED38
+    bank=7    addr=$DF20
+    bank=7    addr=$C8EF
+    bank=7    addr=$DE04
+    bank=7    addr=$C848
+    bank=7    addr=$CE06
+    bank=7    addr=$CE21
+    bank=7    addr=$E591
+    bank=7    addr=$E991
+    bank=7    addr=$D908
+    bank=7    addr=$CD0F
+    bank=7    addr=$CB0F
+    bank=7    addr=$D03F
+    bank=7    addr=$F828
+    bank=7    addr=$E480
+    bank=7    addr=$DB5D
+    bank=7    addr=$DF54
+    bank=7    addr=$E557
+    bank=7    addr=$DDFC
+    bank=7    addr=$FE77
+    bank=7    addr=$D751
+    bank=7    addr=$FC59
+    bank=7    addr=$FCF9
+    bank=7    addr=$FCD3
+    bank=7    addr=$E1FC
+    bank=7    addr=$C4E1
+    bank=7    addr=$E1FD
+    bank=7    addr=$F7FE
+    bank=7    addr=$E015
+    bank=7    addr=$D01E
+    bank=7    addr=$D0A0
+    bank=7    addr=$E94F
+    bank=7    addr=$D5C1
+    bank=7    addr=$F9E3
+    bank=7    addr=$C305
+    bank=7    addr=$C347
+    bank=7    addr=$C4B7
+    bank=7    addr=$C3BC
+    bank=7    addr=$C4C6
+    bank=7    addr=$C4F2
+    bank=7    addr=$C42B
+    bank=7    addr=$C166
+    bank=7    addr=$C463
+    bank=7    addr=$C3A8
+    bank=7    addr=$C480
+    bank=7    addr=$C49D
+    bank=7    addr=$DD02
+    bank=7    addr=$C335
+    bank=7    addr=$C163
+    bank=7    addr=$C47E
+    bank=7    addr=$E1FF
+    bank=7    addr=$C3B8
+    bank=7    addr=$C342
+    bank=7    addr=$CE44
+    bank=7    addr=$F829
+    bank=7    addr=$F885
+    bank=7    addr=$F585
+    bank=7    addr=$F085
+    bank=7    addr=$D58E
+    bank=7    addr=$FF96
+    bank=7    addr=$E20C
+    bank=7    addr=$F2A4
+    bank=7    addr=$F0EA
+    bank=7    addr=$F8A1
+    bank=7    addr=$E100
+    bank=7    addr=$E212
+    bank=7    addr=$EBB3
+    bank=7    addr=$F096
+    bank=7    addr=$E0BE
+    bank=7    addr=$E396
+    bank=7    addr=$ED2B
+    bank=7    addr=$DCE9
+    bank=7    addr=$F182
+    bank=7    addr=$ED82
+    bank=7    addr=$FFAC
+    bank=7    addr=$E352
+    bank=7    addr=$F30B
+    bank=7    addr=$E333
+    bank=7    addr=$E9B7
+    bank=7    addr=$E985
+    bank=0    addr=$B081
+    bank=0    addr=$B486
+    bank=0    addr=$B3B3
+    bank=0    addr=$B362
+    bank=0    addr=$9C88
+    bank=0    addr=$B1AC
+    bank=0    addr=$B2AA
+    bank=0    addr=$B1B2
+    bank=0    addr=$AEAA
+    bank=0    addr=$B5B4
+    bank=0    addr=$AEAB
+    bank=0    addr=$AEC3
+    bank=0    addr=$B3BF
+    bank=0    addr=$8E74
+    bank=0    addr=$8E9C
+    bank=0    addr=$8EC4
+    bank=0    addr=$8EEC
+    bank=0    addr=$8F14
+    bank=0    addr=$898F
+    bank=0    addr=$9C32
+    bank=0    addr=$B501
+    bank=0    addr=$B601
+    bank=0    addr=$9DB6
+    bank=0    addr=$9DBC
+    bank=0    addr=$B7D3
+    bank=0    addr=$8A10
+    bank=0    addr=$8ADE
+    bank=0    addr=$B6B5
+    bank=0    addr=$B4BD
+    bank=0    addr=$B5BD
+    bank=0    addr=$8EBF
+    bank=0    addr=$8EC0
+    bank=0    addr=$BAD1
+    bank=0    addr=$9DB1
+    bank=0    addr=$8A24
+    bank=0    addr=$AE3E
+    bank=0    addr=$8EE2
+    bank=0    addr=$A55D
+    bank=0    addr=$A919
+    bank=0    addr=$B1B1
+    bank=0    addr=$B3B2
+    bank=0    addr=$B2B6
+    bank=0    addr=$B8B6
+    bank=0    addr=$B355
+    bank=0    addr=$B33A
+    bank=0    addr=$B35C
+    bank=0    addr=$B9DC
+    bank=0    addr=$AE9C
+    bank=0    addr=$AEBC
+    bank=0    addr=$AEE0
+    bank=0    addr=$AEF2
+    bank=0    addr=$AF16
+    bank=0    addr=$AF31
+    bank=0    addr=$AF3A
+    bank=0    addr=$AF5E
+    bank=0    addr=$AF82
+    bank=0    addr=$AFDC
+    bank=0    addr=$AFEE
+    bank=0    addr=$B009
+    bank=0    addr=$B024
+    bank=0    addr=$B02D
+    bank=0    addr=$B048
+    bank=0    addr=$B051
+    bank=0    addr=$B05A
+    bank=0    addr=$B075
+    bank=0    addr=$B090
+    bank=0    addr=$B0F6
+    bank=0    addr=$B108
+    bank=0    addr=$B123
+    bank=0    addr=$B12C
+    bank=0    addr=$B147
+    bank=0    addr=$B150
+    bank=0    addr=$B159
+    bank=0    addr=$B16B
+    bank=0    addr=$B186
+    bank=0    addr=$B3B1
+    bank=0    addr=$B1BC
+    bank=0    addr=$B20E
+    bank=0    addr=$B232
+    bank=0    addr=$B24D
+    bank=0    addr=$B256
+    bank=0    addr=$B27A
+    bank=0    addr=$B28C
+    bank=0    addr=$B295
+    bank=0    addr=$B2B9
+    bank=0    addr=$B317
+    bank=0    addr=$B33B
+    bank=0    addr=$B3B9
+    bank=0    addr=$B3CB
+    bank=0    addr=$B3D4
+    bank=0    addr=$B3E6
+    bank=0    addr=$B3EF
+    bank=0    addr=$B44F
+    bank=0    addr=$B473
+    bank=0    addr=$B48E
+    bank=0    addr=$B4A9
+    bank=0    addr=$B4B2
+    bank=0    addr=$B4CD
+    bank=0    addr=$B4D6
+    bank=0    addr=$B4DF
+    bank=0    addr=$B4F1
+    bank=0    addr=$B51E
+    bank=0    addr=$B584
+    bank=0    addr=$B5BA
+    bank=0    addr=$B1B5
+    bank=0    addr=$B5C3
+    bank=0    addr=$B5D5
+    bank=0    addr=$B5F0
+    bank=0    addr=$B602
+    bank=0    addr=$B626
+    bank=0    addr=$B62F
+    bank=0    addr=$B64A
+    bank=0    addr=$8F0A
+    bank=0    addr=$B6AA
+    bank=0    addr=$B3B6
+    bank=0    addr=$B6C5
+    bank=0    addr=$B6CE
+    bank=0    addr=$B6E0
+    bank=0    addr=$B6E9
+    bank=0    addr=$B71F
+    bank=0    addr=$B73A
+    bank=0    addr=$B767
+    bank=0    addr=$B7C7
+    bank=0    addr=$B7E2
+    bank=0    addr=$B7F4
+    bank=0    addr=$B7FD
+    bank=0    addr=$B80F
+    bank=0    addr=$B821
+    bank=0    addr=$B84E
+    bank=0    addr=$B857
+    bank=0    addr=$B860
+    bank=0    addr=$B872
+    bank=0    addr=$B8D8
+    bank=0    addr=$B8EA
+    bank=0    addr=$B905
+    bank=0    addr=$B920
+    bank=0    addr=$B93B
+    bank=0    addr=$B95F
+    bank=0    addr=$B968
+    bank=0    addr=$B97A
+    bank=0    addr=$B983
+    bank=0    addr=$B995
+    bank=0    addr=$B99B
+    bank=0    addr=$B9D5
+    bank=0    addr=$B9DE
+    bank=0    addr=$BA02
+    bank=0    addr=$BA0B
+    bank=0    addr=$BA1D
+    bank=0    addr=$BA2F
+    bank=0    addr=$B100
+    bank=0    addr=$A568
+    bank=0    addr=$A91C
+    bank=0    addr=$A95E
+    bank=0    addr=$B018
+    bank=0    addr=$8A8D
+    bank=0    addr=$A954
+    bank=0    addr=$A95D
+    bank=0    addr=$8ACA
+    bank=0    addr=$B902
+    bank=0    addr=$AE9D
+    bank=0    addr=$B49D
+    bank=0    addr=$8030
+    bank=0    addr=$A56A
+    bank=0    addr=$B106
+    bank=0    addr=$B6D0
+    bank=0    addr=$8AE8
+    bank=0    addr=$A955
+    bank=0    addr=$A957
+    bank=0    addr=$A959
+    bank=0    addr=$A956
+    bank=0    addr=$A958
+    bank=0    addr=$A95B
+    bank=0    addr=$A560
+    bank=0    addr=$A95A
+    bank=0    addr=$B0F8
+    bank=0    addr=$A571
+    bank=0    addr=$AEC4
+    bank=0    addr=$A91B
+    bank=0    addr=$B040
+    bank=0    addr=$AECD
+    bank=0    addr=$A56F
+    bank=0    addr=$B102
+    bank=0    addr=$B054
+    bank=0    addr=$A91F
+    bank=0    addr=$A563
+    bank=0    addr=$AD10
+    bank=0    addr=$B117
+    bank=0    addr=$B11D
+    bank=0    addr=$B499
+    bank=0    addr=$B90C
+    bank=0    addr=$8A60
+    bank=0    addr=$B114
+    bank=0    addr=$A91A
+    bank=0    addr=$AEDD
+    bank=0    addr=$B10F
+    bank=0    addr=$B10A
+    bank=0    addr=$B148
+    bank=0    addr=$B107
+    bank=0    addr=$8A4C
+    bank=0    addr=$B001
+    bank=0    addr=$B520
+    bank=0    addr=$AF29
+    bank=0    addr=$B113
+    bank=0    addr=$B110
+    bank=0    addr=$B11B
+    bank=0    addr=$8AE7
+    bank=0    addr=$B0E8
+    bank=0    addr=$88E8
+    bank=0    addr=$B7EC
+    bank=0    addr=$BA8D
+    bank=0    addr=$B0FC
+    bank=0    addr=$AEA9
+    bank=0    addr=$8AA2
+    bank=0    addr=$B3F2
+    bank=0    addr=$B9F7
+    bank=0    addr=$AFF6
+    bank=0    addr=$B015
+    bank=0    addr=$B0F9
+    bank=0    addr=$AF80
+    bank=0    addr=$B6F4
+    bank=0    addr=$AF72
+    bank=0    addr=$8A48
+    bank=0    addr=$AEFD
+    bank=0    addr=$A580
+    bank=0    addr=$8AD4
+    bank=0    addr=$AED4
+    bank=1    addr=$8042
+    bank=1    addr=$83FE
+    bank=1    addr=$87DE
+    bank=1    addr=$8B1E
+    bank=1    addr=$8C0D
+    bank=1    addr=$8D05
+    bank=1    addr=$8DD5
+    bank=1    addr=$8FB3
+    bank=1    addr=$91A3
+    bank=1    addr=$A859
+    bank=1    addr=$8600
+    bank=1    addr=$9194
+    bank=1    addr=$8E8D
+    bank=1    addr=$8401
+    bank=1    addr=$9096
+    bank=1    addr=$909A
+    bank=1    addr=$A1A2
+    bank=1    addr=$9292
+    bank=1    addr=$9291
+    bank=1    addr=$8F0F
+    bank=1    addr=$B5E8
+    bank=1    addr=$91A5
+    bank=1    addr=$A51E
+    bank=1    addr=$A325
+    bank=1    addr=$8F8D
+    bank=1    addr=$907F
+    bank=1    addr=$8001
+    bank=1    addr=$8E90
+    bank=1    addr=$AF9D
+    bank=1    addr=$8FB5
+    bank=1    addr=$8FB4
+    bank=1    addr=$8F77
+    bank=1    addr=$B0B0
+    bank=1    addr=$B7C7
+    bank=1    addr=$BE15
+    bank=1    addr=$AFAA
+    bank=1    addr=$AF55
+    bank=1    addr=$B0FC
+    bank=1    addr=$B037
+    bank=1    addr=$9287
+    bank=1    addr=$88B0
+    bank=1    addr=$B9B8
+    bank=1    addr=$8EFC
+    bank=1    addr=$8DFF
+    bank=1    addr=$91FF
+    bank=1    addr=$82FD
+    bank=1    addr=$8E9B
+    bank=1    addr=$82FC
+    bank=1    addr=$9285
+    bank=1    addr=$AFD5
+    bank=1    addr=$B0D7
+    bank=1    addr=$8387
+    bank=1    addr=$A838
+    bank=1    addr=$8F48
+    bank=1    addr=$8012
+    bank=1    addr=$801B
+    bank=1    addr=$AEAF
+    bank=1    addr=$90A0
+    bank=1    addr=$A50F
+    bank=1    addr=$9052
+    bank=1    addr=$9006
+    bank=1    addr=$908A
+    bank=1    addr=$8656
+    bank=1    addr=$A90B
+    bank=1    addr=$9329
+    bank=1    addr=$9029
+    bank=1    addr=$A008
+    bank=1    addr=$8539
+    bank=1    addr=$8603
+    bank=1    addr=$9160
+    bank=1    addr=$8E00
+    bank=1    addr=$89E3
+    bank=1    addr=$9D00
+    bank=1    addr=$A506
+    bank=1    addr=$8D08
+    bank=1    addr=$8000
+    bank=1    addr=$BF2E
+    bank=1    addr=$AF34
+    bank=1    addr=$8304
+    bank=1    addr=$90EC
+    bank=1    addr=$9271
+    bank=1    addr=$9315
+    bank=1    addr=$8E61
+    bank=1    addr=$8E81
+    bank=1    addr=$8F56
+    bank=1    addr=$906C
+    bank=1    addr=$90D5
+    bank=1    addr=$90E9
+    bank=1    addr=$90FD
+    bank=1    addr=$9185
+    bank=1    addr=$B43E
+    bank=1    addr=$B67E
+    bank=1    addr=$B612
+    bank=1    addr=$8E95
+    bank=1    addr=$8E96
+    bank=1    addr=$91CC
+    bank=1    addr=$93EA
+    bank=1    addr=$92F2
+    bank=1    addr=$A50B
+    bank=1    addr=$904A
+    bank=1    addr=$A504
+    bank=1    addr=$85FD
+    bank=1    addr=$A524
+    bank=1    addr=$92A5
+    bank=1    addr=$9100
+    bank=1    addr=$91C8
+    bank=1    addr=$A995
+    bank=1    addr=$91ED
+    bank=1    addr=$91EC
+    bank=1    addr=$9196
+    bank=1    addr=$A50D
+    bank=1    addr=$A90E
+    bank=1    addr=$9102
+    bank=1    addr=$A514
+    bank=1    addr=$A51D
+    bank=1    addr=$A508
+    bank=1    addr=$85E7
+    bank=1    addr=$A939
+    bank=1    addr=$90F0
+    bank=1    addr=$A517
+    bank=1    addr=$8D06
+    bank=1    addr=$90DB
+    bank=1    addr=$909F
+    bank=1    addr=$8E04
+    bank=1    addr=$8F08
+    bank=1    addr=$9108
+    bank=1    addr=$9308
+    bank=1    addr=$9D08
+    bank=1    addr=$B54C
+    bank=1    addr=$8E5D
+    bank=1    addr=$ADD5
+    bank=1    addr=$9179
+    bank=1    addr=$9170
+    bank=1    addr=$8DFD
+    bank=1    addr=$9002
+    bank=1    addr=$8537
+    bank=1    addr=$AE9D
+    bank=1    addr=$8546
+    bank=1    addr=$8018
+    bank=1    addr=$BD50
+    bank=1    addr=$AE06
+    bank=1    addr=$9055
+    bank=1    addr=$85FE
+    bank=1    addr=$A6BD
+    bank=1    addr=$A51B
+    bank=1    addr=$856B
+    bank=1    addr=$AE1D
+    bank=1    addr=$A5FD
+    bank=1    addr=$A2BA
+    bank=1    addr=$85E6
+    bank=1    addr=$A516
+    bank=1    addr=$A00F
+    bank=1    addr=$90FF
+    bank=1    addr=$ADD4
+    bank=1    addr=$902F
+    bank=1    addr=$9004
+    bank=1    addr=$ADD6
+    bank=1    addr=$8DD7
+    bank=1    addr=$BD90
+    bank=1    addr=$9018
+    bank=1    addr=$9009
+    bank=1    addr=$8DD8
+    bank=1    addr=$90AB
+    bank=1    addr=$8DFE
+    bank=1    addr=$9101
+    bank=1    addr=$90B4
+    bank=1    addr=$90AF
+    bank=1    addr=$9109
+    bank=1    addr=$90AA
+    bank=1    addr=$91F0
+    bank=1    addr=$9107
+    bank=1    addr=$91CE
+    bank=1    addr=$90F8
+    bank=1    addr=$91F7
+    bank=1    addr=$AA0F
+    bank=1    addr=$85A9
+    bank=1    addr=$8E60
+    bank=1    addr=$BF29
+    bank=1    addr=$A0EC
+    bank=1    addr=$9115
+    bank=1    addr=$B110
+    bank=1    addr=$B548
+    bank=1    addr=$91A8
+    bank=1    addr=$B0E8
+    bank=1    addr=$8400
+    bank=1    addr=$904C
+    bank=1    addr=$92F3
+    bank=1    addr=$90EF
+    bank=1    addr=$81A2
+    bank=1    addr=$A010
+    bank=1    addr=$89A2
+    bank=1    addr=$8EA2
+    bank=1    addr=$92F0
+    bank=1    addr=$9030
+    bank=1    addr=$91A9
+    bank=1    addr=$92A9
+    bank=1    addr=$ADF5
+    bank=1    addr=$9070
+    bank=1    addr=$ABA2
+    bank=1    addr=$B00C
+    bank=1    addr=$AF80
+    bank=1    addr=$BE2F
+    bank=1    addr=$AFD4
+    bank=1    addr=$A692
+    bank=1    addr=$A276
+    bank=1    addr=$A6D5
+    bank=1    addr=$8006
+    bank=1    addr=$ADF3
+    bank=1    addr=$AEFC
+    bank=1    addr=$AED4
+    bank=1    addr=$90FC
+    bank=2    addr=$A184
+    bank=2    addr=$8B8C
+    bank=2    addr=$A243
+    bank=2    addr=$BC0F
+    bank=2    addr=$8206
+    bank=2    addr=$A137
+    bank=2    addr=$9266
+    bank=2    addr=$AB92
+    bank=2    addr=$8F9A
+    bank=2    addr=$92A6
+    bank=2    addr=$92EF
+    bank=2    addr=$93F6
+    bank=2    addr=$BB12
+    bank=2    addr=$A446
+    bank=2    addr=$B60E
+    bank=2    addr=$A20F
+    bank=2    addr=$A40B
+    bank=2    addr=$81F5
+    bank=2    addr=$8B04
+    bank=2    addr=$8B22
+    bank=2    addr=$A300
+    bank=2    addr=$9C08
+    bank=2    addr=$84A0
+    bank=2    addr=$8600
+    bank=2    addr=$988C
+    bank=2    addr=$A10C
+    bank=2    addr=$A288
+    bank=2    addr=$A373
+    bank=2    addr=$A37C
+    bank=2    addr=$A415
+    bank=2    addr=$A41E
+    bank=2    addr=$A427
+    bank=2    addr=$A430
+    bank=2    addr=$A439
+    bank=2    addr=$A442
+    bank=2    addr=$A44B
+    bank=2    addr=$A454
+    bank=2    addr=$A45D
+    bank=2    addr=$A466
+    bank=2    addr=$A46F
+    bank=2    addr=$A478
+    bank=2    addr=$A481
+    bank=2    addr=$A49C
+    bank=2    addr=$A4C9
+    bank=2    addr=$A4D2
+    bank=2    addr=$A4DB
+    bank=2    addr=$A4E4
+    bank=2    addr=$A4ED
+    bank=2    addr=$A4F6
+    bank=2    addr=$9040
+    bank=2    addr=$A718
+    bank=2    addr=$AA04
+    bank=2    addr=$98AA
+    bank=2    addr=$9B1A
+    bank=2    addr=$AC78
+    bank=2    addr=$A01D
+    bank=2    addr=$A033
+    bank=2    addr=$A004
+    bank=2    addr=$A2E0
+    bank=2    addr=$A240
+    bank=2    addr=$A02A
+    bank=2    addr=$A290
+    bank=2    addr=$A249
+    bank=2    addr=$A00E
+    bank=2    addr=$A231
+    bank=2    addr=$A214
+    bank=2    addr=$A252
+    bank=2    addr=$A220
+    bank=2    addr=$A509
+    bank=2    addr=$A246
+    bank=2    addr=$A0F8
+    bank=2    addr=$A031
+    bank=2    addr=$9D61
+    bank=2    addr=$9020
+    bank=2    addr=$A223
+    bank=2    addr=$A04E
+    bank=2    addr=$A051
+    bank=2    addr=$8D80
+    bank=2    addr=$98C0
+    bank=2    addr=$A020
+    bank=2    addr=$BF63
+    bank=2    addr=$A50B
+    bank=2    addr=$ADC4
+    bank=2    addr=$BA43
+    bank=2    addr=$9C20
+    bank=2    addr=$A2C6
+    bank=2    addr=$A50A
+    bank=2    addr=$9803
+    bank=2    addr=$8485
+    bank=2    addr=$8535
+    bank=2    addr=$AD18
+    bank=2    addr=$A234
+    bank=2    addr=$A237
+    bank=2    addr=$86E8
+    bank=2    addr=$9DAD
+    bank=2    addr=$A060
+    bank=2    addr=$A500
+    bank=2    addr=$A009
+    bank=2    addr=$8DA1
+    bank=2    addr=$8509
+    bank=2    addr=$A298
+    bank=2    addr=$A209
+    bank=2    addr=$A39D
+    bank=2    addr=$9DCD
+    bank=2    addr=$A28D
+    bank=2    addr=$A204
+    bank=2    addr=$A2FD
+    bank=2    addr=$A0CD
+    bank=2    addr=$964C
+    bank=2    addr=$B7BE
+    bank=2    addr=$990D
+    bank=2    addr=$A420
+    bank=2    addr=$9DBD
+    bank=2    addr=$8BA5
+    bank=2    addr=$A510
+    bank=2    addr=$AD0D
+    bank=2    addr=$A511
+    bank=2    addr=$AD4E
+    bank=2    addr=$AD0F
+    bank=2    addr=$9E31
+    bank=2    addr=$A50C
+    bank=2    addr=$9008
+    bank=2    addr=$A056
+    bank=2    addr=$A0CA
+    bank=2    addr=$AD48
+    bank=2    addr=$A22E
+    bank=2    addr=$A4AD
+    bank=2    addr=$A19E
+    bank=2    addr=$A018
+    bank=2    addr=$A0B0
+    bank=2    addr=$A0AD
+    bank=2    addr=$804C
+    bank=2    addr=$8A44
+    bank=2    addr=$A0A7
+    bank=2    addr=$A385
+    bank=2    addr=$A485
+    bank=2    addr=$88F7
+    bank=2    addr=$A083
+    bank=2    addr=$A160
+    bank=2    addr=$A0E7
+    bank=2    addr=$A0A2
+    bank=2    addr=$A08B
+    bank=2    addr=$82E5
+    bank=2    addr=$A090
+    bank=2    addr=$A2CE
+    bank=2    addr=$A097
+    bank=2    addr=$A09C
+    bank=2    addr=$A09F
+    bank=2    addr=$B015
+    bank=2    addr=$A20C
+    bank=2    addr=$A0E2
+    bank=2    addr=$A0AA
+    bank=2    addr=$8DFC
+    bank=3    addr=$BD04
+    bank=3    addr=$BD20
+    bank=3    addr=$A948
+    bank=3    addr=$BD0B
+    bank=3    addr=$AC8B
+    bank=3    addr=$A908
+    bank=3    addr=$A09D
+    bank=3    addr=$A260
+    bank=3    addr=$A205
+    bank=3    addr=$A288
+    bank=3    addr=$B00A
+    bank=3    addr=$AAF0
+    bank=3    addr=$ADA8
+    bank=3    addr=$A902
+    bank=3    addr=$BD60
+    bank=3    addr=$A900
+    bank=3    addr=$AC06
+    bank=3    addr=$BD1F
+    bank=3    addr=$B508
+    bank=3    addr=$B708
+    bank=3    addr=$A8A9
+    bank=3    addr=$B2B2
+    bank=3    addr=$B2F8
+    bank=3    addr=$BBB9
+    bank=3    addr=$B2FE
+    bank=3    addr=$B424
+    bank=3    addr=$A199
+    bank=3    addr=$A4BC
+    bank=3    addr=$B3C3
+    bank=3    addr=$B4A1
+    bank=3    addr=$B99E
+    bank=3    addr=$BD1A
+    bank=3    addr=$A09A
+    bank=3    addr=$B497
+    bank=3    addr=$BF8A
+    bank=3    addr=$A03E
+    bank=3    addr=$A2C6
+    bank=3    addr=$A6FC
+    bank=3    addr=$A90E
+    bank=3    addr=$B49D
+    bank=3    addr=$A79D
+    bank=3    addr=$A26E
+    bank=3    addr=$BC01
+    bank=3    addr=$A9B7
+    bank=3    addr=$B44C
+    bank=3    addr=$A959
+    bank=3    addr=$A956
+    bank=3    addr=$A9CC
+    bank=3    addr=$BD53
+    bank=3    addr=$A203
+    bank=3    addr=$BA49
+    bank=3    addr=$A510
+    bank=3    addr=$A54B
+    bank=3    addr=$A687
+    bank=3    addr=$A9D2
+    bank=3    addr=$ADC5
+    bank=3    addr=$A0CA
+    bank=3    addr=$BD3B
+    bank=3    addr=$B4D5
+    bank=3    addr=$A069
+    bank=3    addr=$AEDD
+    bank=3    addr=$A84C
+    bank=3    addr=$BDDE
+    bank=3    addr=$A00C
+    bank=3    addr=$BDE2
+    bank=3    addr=$A017
+    bank=3    addr=$A047
+    bank=3    addr=$B2D0
+    bank=3    addr=$A0A5
+    bank=3    addr=$A4A5
+    bank=3    addr=$ADE6
+    bank=3    addr=$B2F7
+    bank=3    addr=$BA8D
+    bank=3    addr=$A2E8
+    bank=3    addr=$A2A9
+    bank=3    addr=$A921
+    bank=3    addr=$A08B
+    bank=3    addr=$BDE5
+    bank=3    addr=$A097
+    bank=3    addr=$BFF0
+    bank=3    addr=$BE8A
+    bank=4    addr=$8004
+    bank=4    addr=$8072
+    bank=4    addr=$8300
+    bank=4    addr=$8400
+    bank=4    addr=$8950
+    bank=4    addr=$8789
+    bank=4    addr=$8013
+    bank=4    addr=$9089
+    bank=4    addr=$83CD
+    bank=4    addr=$8101
+    bank=4    addr=$87C0
+    bank=4    addr=$8017
+    bank=4    addr=$8D5A
+    bank=4    addr=$8656
+    bank=4    addr=$8E09
+    bank=4    addr=$9037
+    bank=4    addr=$8090
+    bank=4    addr=$8B14
+    bank=4    addr=$8104
+    bank=4    addr=$8083
+    bank=4    addr=$9A1C
+    bank=4    addr=$809A
+    bank=4    addr=$9114
+    bank=4    addr=$843D
+    bank=4    addr=$8868
+    bank=4    addr=$880B
+    bank=4    addr=$8202
+    bank=4    addr=$B000
+    bank=4    addr=$83FF
+    bank=4    addr=$8A14
+    bank=4    addr=$8437
+    bank=4    addr=$8C0F
+    bank=4    addr=$81B4
+    bank=4    addr=$9614
+    bank=4    addr=$9057
+    bank=4    addr=$832C
+    bank=4    addr=$8114
+    bank=4    addr=$800C
+    bank=4    addr=$885E
+    bank=4    addr=$8783
+    bank=4    addr=$858B
+    bank=4    addr=$8800
+    bank=4    addr=$9681
+    bank=4    addr=$956E
+    bank=4    addr=$9594
+    bank=4    addr=$9568
+    bank=4    addr=$9121
+    bank=4    addr=$9002
+    bank=4    addr=$848A
+    bank=4    addr=$8E14
+    bank=4    addr=$9000
+    bank=4    addr=$9400
+    bank=4    addr=$81A9
+    bank=4    addr=$962A
+    bank=4    addr=$9160
+    bank=4    addr=$8D03
+    bank=4    addr=$8069
+    bank=4    addr=$850F
+    bank=4    addr=$8D00
+    bank=4    addr=$80A9
+    bank=4    addr=$8501
+    bank=4    addr=$8385
+    bank=4    addr=$B001
+    bank=4    addr=$86F6
+    bank=4    addr=$8D06
+    bank=4    addr=$855E
+    bank=4    addr=$8508
+    bank=4    addr=$8B60
+    bank=4    addr=$BD3B
+    bank=4    addr=$860A
+    bank=4    addr=$8506
+    bank=4    addr=$8D54
+    bank=4    addr=$A474
+    bank=4    addr=$B549
+    bank=4    addr=$B56B
+    bank=4    addr=$8DB5
+    bank=4    addr=$B5BB
+    bank=4    addr=$B5DD
+    bank=4    addr=$B647
+    bank=4    addr=$B75F
+    bank=4    addr=$B781
+    bank=4    addr=$B79B
+    bank=4    addr=$B8AB
+    bank=4    addr=$B94D
+    bank=4    addr=$87B9
+    bank=4    addr=$B987
+    bank=4    addr=$B9B3
+    bank=4    addr=$B9F9
+    bank=4    addr=$8281
+    bank=4    addr=$8889
+    bank=4    addr=$9484
+    bank=4    addr=$A09E
+    bank=4    addr=$87E4
+    bank=4    addr=$B8B7
+    bank=4    addr=$99E4
+    bank=4    addr=$BA99
+    bank=4    addr=$BDE4
+    bank=4    addr=$BFBB
+    bank=4    addr=$BEBB
+    bank=4    addr=$BFC1
+    bank=4    addr=$BAD3
+    bank=4    addr=$8A89
+    bank=4    addr=$9B9C
+    bank=4    addr=$9695
+    bank=4    addr=$9001
+    bank=4    addr=$9599
+    bank=4    addr=$9A01
+    bank=4    addr=$86DB
+    bank=4    addr=$8180
+    bank=4    addr=$8771
+    bank=4    addr=$8269
+    bank=4    addr=$8382
+    bank=4    addr=$8485
+    bank=4    addr=$8987
+    bank=4    addr=$B200
+    bank=4    addr=$B8BB
+    bank=4    addr=$AFB8
+    bank=4    addr=$BEC0
+    bank=4    addr=$BAB9
+    bank=4    addr=$898B
+    bank=4    addr=$92B2
+    bank=4    addr=$B8AF
+    bank=4    addr=$B027
+    bank=4    addr=$8988
+    bank=4    addr=$8D7A
+    bank=4    addr=$878C
+    bank=4    addr=$81FC
+    bank=4    addr=$8681
+    bank=4    addr=$8887
+    bank=4    addr=$9285
+    bank=4    addr=$9092
+    bank=4    addr=$BF02
+    bank=4    addr=$BEFC
+
+## Full opcode histogram (non-zero buckets)
+  $00  BRK        mode=IMP   22341
+  $01  ORA        mode=INDX  7686
+  $02  ???  KIL   mode=IMP   8395
+  $03  SLO  SLO   mode=INDX  7509
+  $04  NOP*  NOP*  mode=ZP    2709
+  $05  ORA        mode=ZP    2869
+  $06  ASL        mode=ZP    1548
+  $07  SLO  SLO   mode=ZP    2580
+  $08  PHP        mode=IMP   1490
+  $09  ORA        mode=IMM   2796
+  $0A  ASL        mode=ACC   3383
+  $0B  ANC  AAC   mode=IMM   1151
+  $0C  NOP*  NOP*  mode=ABS   1701
+  $0D  ORA        mode=ABS   959
+  $0E  ASL        mode=ABS   1137
+  $0F  SLO  SLO   mode=ABS   2864
+  $10  BPL        mode=REL   7485
+  $11  ORA        mode=INDY  2104
+  $12  ???  KIL   mode=IMP   1183
+  $13  SLO  SLO   mode=INDY  1452
+  $14  NOP*  NOP*  mode=ZPX   1336
+  $15  ORA        mode=ZPX   1231
+  $16  ASL        mode=ZPX   1896
+  $17  SLO  SLO   mode=ZPX   1068
+  $18  CLC        mode=IMP   5179
+  $19  ORA        mode=ABSY  870
+  $1A  NOP  NOP*  mode=IMP   1262
+  $1B  SLO  SLO   mode=ABSY  773
+  $1C  NOP*  NOP*  mode=ABSX  764
+  $1D  ORA        mode=ABSX  1308
+  $1E  ASL        mode=ABSX  333
+  $1F  SLO  SLO   mode=ABSX  550
+  $20  JSR        mode=ABS   24826
+  $21  AND        mode=INDX  887
+  $22  ???  KIL   mode=IMP   1559
+  $23  RLA  RLA   mode=INDX  1321
+  $24  BIT        mode=ZP    3916
+  $25  AND        mode=ZP    1440
+  $26  ROL        mode=ZP    1076
+  $27  RLA  RLA   mode=ZP    2141
+  $28  PLP        mode=IMP   965
+  $29  AND        mode=IMM   7213
+  $2A  ROL        mode=ACC   693
+  $2B  ANC  AAC   mode=IMM   591
+  $2C  BIT        mode=ABS   980
+  $2D  AND        mode=ABS   652
+  $2E  ROL        mode=ABS   328
+  $2F  RLA  RLA   mode=ABS   1059
+  $30  BMI        mode=REL   3760
+  $31  AND        mode=INDY  931
+  $32  ???  KIL   mode=IMP   9426
+  $33  RLA  RLA   mode=INDY  819
+  $34  NOP*  NOP*  mode=ZPX   1284
+  $35  AND        mode=ZPX   909
+  $36  ROL        mode=ZPX   1202
+  $37  RLA  RLA   mode=ZPX   1644
+  $38  SEC        mode=IMP   2786
+  $39  AND        mode=ABSY  809
+  $3A  NOP  NOP*  mode=IMP   612
+  $3B  RLA  RLA   mode=ABSY  393
+  $3C  NOP*  NOP*  mode=ABSX  709
+  $3D  AND        mode=ABSX  580
+  $3E  ROL        mode=ABSX  2337
+  $3F  RLA  RLA   mode=ABSX  1200
+  $40  RTI        mode=IMP   1472
+  $41  EOR        mode=INDX  2181
+  $42  ???  KIL   mode=IMP   1491
+  $43  SRE  SRE   mode=INDX  1538
+  $44  NOP*  NOP*  mode=ZP    850
+  $45  EOR        mode=ZP    770
+  $46  LSR        mode=ZP    893
+  $47  SRE  SRE   mode=ZP    755
+  $48  PHA        mode=IMP   1509
+  $49  EOR        mode=IMM   735
+  $4A  LSR        mode=ACC   3236
+  $4B  ALR  ALR   mode=IMM   1846
+  $4C  JMP        mode=ABS   18318
+  $4D  EOR        mode=ABS   702
+  $4E  LSR        mode=ABS   392
+  $4F  SRE  SRE   mode=ABS   473
+  $50  BVC        mode=REL   1184
+  $51  EOR        mode=INDY  453
+  $52  ???  KIL   mode=IMP   363
+  $53  SRE  SRE   mode=INDY  453
+  $54  NOP*  NOP*  mode=ZPX   263
+  $55  EOR        mode=ZPX   1315
+  $56  LSR        mode=ZPX   567
+  $57  SRE  SRE   mode=ZPX   569
+  $58  CLI        mode=IMP   383
+  $59  EOR        mode=ABSY  1005
+  $5A  NOP  NOP*  mode=IMP   561
+  $5B  SRE  SRE   mode=ABSY  2097
+  $5C  NOP*  NOP*  mode=ABSX  457
+  $5D  EOR        mode=ABSX  455
+  $5E  LSR        mode=ABSX  666
+  $5F  SRE  SRE   mode=ABSX  456
+  $60  RTS        mode=IMP   6714
+  $61  ADC        mode=INDX  565
+  $62  ???  KIL   mode=IMP   331
+  $63  RRA  RRA   mode=INDX  405
+  $64  NOP*  NOP*  mode=ZP    282
+  $65  ADC        mode=ZP    1638
+  $66  ROR        mode=ZP    554
+  $67  RRA  RRA   mode=ZP    346
+  $68  PLA        mode=IMP   2217
+  $69  ADC        mode=IMM   2166
+  $6A  ROR        mode=ACC   440
+  $6B  ARR  ARR   mode=IMM   334
+  $6C  JMP        mode=IND   397
+  $6D  ADC        mode=ABS   588
+  $6E  ROR        mode=ABS   302
+  $6F  RRA  RRA   mode=ABS   862
+  $70  BVS        mode=REL   685
+  $71  ADC        mode=INDY  559
+  $72  ???  KIL   mode=IMP   317
+  $73  RRA  RRA   mode=INDY  292
+  $74  NOP*  NOP*  mode=ZPX   315
+  $75  ADC        mode=ZPX   412
+  $76  ROR        mode=ZPX   571
+  $77  RRA  RRA   mode=ZPX   442
+  $78  SEI        mode=IMP   548
+  $79  ADC        mode=ABSY  368
+  $7A  NOP  NOP*  mode=IMP   198
+  $7B  RRA  RRA   mode=ABSY  833
+  $7C  NOP*  NOP*  mode=ABSX  324
+  $7D  ADC        mode=ABSX  554
+  $7E  ROR        mode=ABSX  390
+  $7F  RRA  RRA   mode=ABSX  824
+  $80  NOP  NOP*  mode=IMM   1801
+  $81  STA        mode=INDX  848
+  $82  NOP  NOP*  mode=IMM   1325
+  $83  SAX  SAX   mode=INDX  1512
+  $84  STY        mode=ZP    1471
+  $85  STA        mode=ZP    17696
+  $86  STX        mode=ZP    1093
+  $87  SAX  SAX   mode=ZP    791
+  $88  DEY        mode=IMP   1662
+  $89  NOP  NOP*  mode=IMM   537
+  $8A  TXA        mode=IMP   2423
+  $8B  ???  XAA   mode=IMM   725
+  $8C  STY        mode=ABS   788
+  $8D  STA        mode=ABS   10110
+  $8E  STX        mode=ABS   976
+  $8F  SAX  SAX   mode=ABS   513
+  $90  BCC        mode=REL   3325
+  $91  STA        mode=INDY  8740
+  $92  ???  KIL   mode=IMP   421
+  $93  ???  SHA   mode=INDY  547
+  $94  STY        mode=ZPX   654
+  $95  STA        mode=ZPX   978
+  $96  STX        mode=ZPY   737
+  $97  SAX  SAX   mode=ZPY   637
+  $98  TYA        mode=IMP   739
+  $99  STA        mode=ABSY  1465
+  $9A  TXS        mode=IMP   556
+  $9B  ???  TAS   mode=ABSY  1020
+  $9C  ???  SHY   mode=ABSX  3338
+  $9D  STA        mode=ABSX  3668
+  $9E  ???  SHX   mode=ABSY  1582
+  $9F  ???  SHA   mode=ABSY  315
+  $A0  LDY        mode=IMM   20165
+  $A1  LDA        mode=INDX  1494
+  $A2  LDX        mode=IMM   11724
+  $A3  LAX  LAX   mode=INDX  1048
+  $A4  LDY        mode=ZP    1376
+  $A5  LDA        mode=ZP    15012
+  $A6  LDX        mode=ZP    1506
+  $A7  LAX  LAX   mode=ZP    429
+  $A8  TAY        mode=IMP   1594
+  $A9  LDA        mode=IMM   29872
+  $AA  TAX        mode=IMP   4373
+  $AB  LAX  LAX   mode=IMM   1011
+  $AC  LDY        mode=ABS   2043
+  $AD  LDA        mode=ABS   5776
+  $AE  LDX        mode=ABS   851
+  $AF  LAX  LAX   mode=ABS   812
+  $B0  BCS        mode=REL   3298
+  $B1  LDA        mode=INDY  9777
+  $B2  ???  KIL   mode=IMP   439
+  $B3  LAX  LAX   mode=INDY  1126
+  $B4  LDY        mode=ZPX   991
+  $B5  LDA        mode=ZPX   700
+  $B6  LDX        mode=ZPY   862
+  $B7  LAX  LAX   mode=ZPY   443
+  $B8  CLV        mode=IMP   597
+  $B9  LDA        mode=ABSY  2373
+  $BA  TSX        mode=IMP   2322
+  $BB  ???  LAS   mode=ABSY  645
+  $BC  LDY        mode=ABSX  734
+  $BD  LDA        mode=ABSX  7355
+  $BE  LDX        mode=ABSY  615
+  $BF  LAX  LAX   mode=ABSY  3269
+  $C0  CPY        mode=IMM   2804
+  $C1  CMP        mode=INDX  1011
+  $C2  NOP  NOP*  mode=IMM   1179
+  $C3  DCP  DCP   mode=INDX  1030
+  $C4  CPY        mode=ZP    626
+  $C5  CMP        mode=ZP    1455
+  $C6  DEC        mode=ZP    962
+  $C7  DCP  DCP   mode=ZP    564
+  $C8  INY        mode=IMP   4028
+  $C9  CMP        mode=IMM   8176
+  $CA  DEX        mode=IMP   5154
+  $CB  AXS  AXS   mode=IMM   555
+  $CC  CPY        mode=ABS   457
+  $CD  CMP        mode=ABS   722
+  $CE  DEC        mode=ABS   1604
+  $CF  DCP  DCP   mode=ABS   294
+  $D0  BNE        mode=REL   10722
+  $D1  CMP        mode=INDY  967
+  $D2  ???  KIL   mode=IMP   315
+  $D3  DCP  DCP   mode=INDY  627
+  $D4  NOP*  NOP*  mode=ZPX   106
+  $D5  CMP        mode=ZPX   593
+  $D6  DEC        mode=ZPX   2663
+  $D7  DCP  DCP   mode=ZPX   342
+  $D8  CLD        mode=IMP   266
+  $D9  CMP        mode=ABSY  209
+  $DA  NOP  NOP*  mode=IMP   357
+  $DB  DCP  DCP   mode=ABSY  201
+  $DC  NOP*  NOP*  mode=ABSX  205
+  $DD  CMP        mode=ABSX  350
+  $DE  DEC        mode=ABSX  914
+  $DF  DCP  DCP   mode=ABSX  244
+  $E0  CPX        mode=IMM   4697
+  $E1  SBC        mode=INDX  519
+  $E2  NOP  NOP*  mode=IMM   672
+  $E3  ISC  ISC   mode=INDX  1439
+  $E4  CPX        mode=ZP    356
+  $E5  SBC        mode=ZP    1972
+  $E6  INC        mode=ZP    2364
+  $E7  ISC  ISC   mode=ZP    284
+  $E8  INX        mode=IMP   2710
+  $E9  SBC        mode=IMM   1760
+  $EA  NOP        mode=IMP   697
+  $EB  SBC  SBC*  mode=IMM   1577
+  $EC  CPX        mode=ABS   2227
+  $ED  SBC        mode=ABS   804
+  $EE  INC        mode=ABS   1595
+  $EF  ISC  ISC   mode=ABS   693
+  $F0  BEQ        mode=REL   9027
+  $F1  SBC        mode=INDY  2357
+  $F2  ???  KIL   mode=IMP   1020
+  $F3  ISC  ISC   mode=INDY  1538
+  $F4  NOP*  NOP*  mode=ZPX   1239
+  $F5  SBC        mode=ZPX   736
+  $F6  INC        mode=ZPX   823
+  $F7  ISC  ISC   mode=ZPX   2574
+  $F8  SED        mode=IMP   745
+  $F9  SBC        mode=ABSY  402
+  $FA  NOP  NOP*  mode=IMP   402
+  $FB  ISC  ISC   mode=ABSY  347
+  $FC  NOP*  NOP*  mode=ABSX  2188
+  $FD  SBC        mode=ABSX  1156
+  $FE  INC        mode=ABSX  649
+  $FF  ISC  ISC   mode=ABSX  6463

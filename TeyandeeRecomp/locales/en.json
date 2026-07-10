@@ -1,0 +1,9 @@
+[
+  {
+    "bank": 0,
+    "addr": "8000",
+    "encoding": "TEYANDEE_MENU",
+    "source": "(placeholder — fill after string table RE)",
+    "replacement": ""
+  }
+]

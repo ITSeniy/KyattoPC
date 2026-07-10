@@ -1,0 +1,17 @@
+build/
+build_recomp/
+generated/
+
+# ROM files — never commit game ROMs
+*.nes
+*.bin
+*.sav
+
+# Log / trace files
+*.log
+*.csv
+!*_annotations.csv
+
+
+# Local MCP server config (paths are machine-specific); see .mcp.json.example
+.mcp.json

@@ -1,0 +1,32 @@
+build/
+build_recomp/
+*.nes
+*.bin
+*.sav
+*.log
+*.zip
+.mcp.json
+
+# nesrecomp is linked/cloned by setup.bat / setup.sh
+nesrecomp
+nestopia-core
+
+# Tile/CHR override runtime artifacts
+tiles/
+chr_dump/
+*.chr.bin
+
+# Bank extracts for Ghidra (rebuild via tools/extract_banks.py)
+banks/
+
+# Ghidra project DB (local; large / machine-specific)
+ghidra/*.rep/
+ghidra/*.gpr
+ghidra/*.lock
+ghidra/*.gar
+
+# Recompiler audit dumps (cwd of NESRecomp run)
+*_finder_audit.csv
+*_auto_entries.csv
+
+# DO NOT ignore generated/ — commit after first successful recompile

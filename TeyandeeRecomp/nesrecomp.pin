@@ -1,0 +1,13 @@
+# nesrecomp.pin — pins this game's expected nesrecomp version.
+#
+# Two optional fields:
+#   branch = <ref>   used when `sha` is unset (default origin/master)
+#   sha    = <hex>   exact pin when nesrecomp is a real git checkout
+#
+# Local workspace may junction ../nesrecomp-master (zip extract, no .git).
+# CMake skips the pin check when nesrecomp/.git is missing.
+#
+# When you switch to a git clone of nesrecomp, set sha= here and re-run setup.
+
+branch = master
+# sha    =

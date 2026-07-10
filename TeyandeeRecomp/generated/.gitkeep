@@ -1,0 +1,7 @@
+# Populated by:
+#   NESRecomp.exe <rom.nes> --game game.toml
+# Expected outputs:
+#   teyandee_full.c
+#   teyandee_dispatch.c
+#   teyandee_coverage.txt
+#   (optional) teyandee_full_bankNN.c

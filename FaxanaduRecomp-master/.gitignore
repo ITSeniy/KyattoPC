@@ -1,0 +1,25 @@
+build/
+*.nes
+*.bin
+*.sav
+*.log
+*.zip
+.mcp.json
+
+# nesrecomp is cloned by setup.sh / setup.bat into this directory.
+# Pinned SHA recorded in nesrecomp.pin and enforced at CMake configure time.
+nesrecomp
+nestopia-core
+
+# Dead FCEUX integration (replaced by Nestopia)
+fceux_stubs.cpp
+fceux_bridge.cpp
+fceux_bridge.h
+fceux_minimal_stubs.cpp
+fceux-core/
+# Tile/CHR override runtime artifacts
+tiles/
+chr_dump/
+*.chr.bin
+
+# DO NOT ignore generated/ — committed for reproducibility
