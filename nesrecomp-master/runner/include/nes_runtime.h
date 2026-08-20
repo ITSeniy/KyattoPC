@@ -61,11 +61,41 @@ int call_by_address_cb(uint16_t addr, int caller_bank);
 /* Depth-counted dispatch used by generated JSR sites; drives deferred JMP-tail
  * targets from a flat loop at the outermost frame (see runtime.c trampoline). */
 int nes_dispatch_call(uint16_t addr, int caller_bank);
+/* Logical 6502 JSR context.  The direct-call recompiler normally does not
+ * mirror JSR return addresses in g_cpu.S, so tail-cycle detection cannot use
+ * S alone to distinguish a real JMP lap from a nested JSR that re-enters the
+ * same tail target.  Generated JSR sites scope a unique token with these
+ * helpers; JMP tails inherit the current token. */
+uint64_t nes_jsr_context_enter(void);
+int      nes_jsr_context_leave(uint64_t previous);
+uint64_t nes_jsr_context_current(void);
+/* Mark the current logical JSR return as discarded (6502 idioms such as
+ * PLA; PLA; JMP).  leave() consumes the mark and tells the generated caller
+ * to skip the instructions following that JSR. */
+void     nes_jsr_context_unwind_current(void);
 /* Dispatch for generated JMP tails: defers when already inside a dispatch so
  * JMP loop chains cannot grow the C stack. */
 int call_by_address_tail(uint16_t addr, int caller_bank);
 /* Dump the always-on ring of recent dispatches (post-mortem attribution). */
 void nes_dump_dispatch_ring(void);
+typedef struct {
+    uint16_t addr;
+    int16_t  caller_bank;
+    uint16_t window_base;
+    uint8_t  s;
+    uint8_t  depth;
+    uint64_t jsr_context;
+    char     kind;
+} NesDispatchEvt;
+typedef struct {
+    uint16_t addr;
+    uint8_t  s;
+    uint64_t jsr_context;
+} NesTailActive;
+/* Read-only snapshots used by the TCP debugger while execution is parked. */
+int nes_dring_last(int n, NesDispatchEvt *dst);
+int nes_tail_debug_state(int32_t *pending, int *pending_slot, int *caller_bank,
+                         NesTailActive *active, int max_active);
 /* Push a context marker into the dispatch ring (kind e.g. 'N'/'n' = NMI
  * enter/exit; tag = vblank depth or other context id). */
 void nes_dring_mark(char kind, uint16_t tag);
@@ -305,6 +335,14 @@ extern int     g_ppu_mid_frame_render;
  * picture tear in Teyandee cutscenes). */
 extern int     g_ppu_force_y_reload;
 
+/* Extra complete scanlines to paint before dispatching an MMC3 render IRQ.
+ * The scanline renderer cannot execute the IRQ handler at its real CPU-cycle
+ * position. Most games are close enough with immediate end-of-line delivery,
+ * but handlers that spend enough cycles before changing CHR/scroll may leave
+ * the following line in the pre-IRQ regime. Games may set this in
+ * game_on_init(); default 0 preserves the normal renderer timing. */
+extern int     g_render_irq_defer_scanlines;
+
 /* Widescreen rendering: games set these in game_on_init() to widen the
  * BG render pass.  Default 256/0/0 = standard 4:3 NES output.
  * g_render_width  = total output width in pixels (e.g. 512 for 2x)
@@ -360,6 +398,11 @@ extern uint8_t g_ws_obj_ctx_valid;   /* context valid flag (game policy sets/cle
 
 /* Frame counter incremented each VBlank */
 extern uint64_t g_frame_count;
+
+/* Set immediately before an intentional process exit (for example, a completed
+ * headless smoke run) so the Windows atexit diagnostics do not report the
+ * still-active recompiled call stack as a crash. */
+extern int g_runner_expected_exit;
 
 /* Monotonic guest CPU-cycle counter — advanced by exactly the same _c that
  * feeds the per-frame s_ops_count accumulator (real instruction cycles + DMC

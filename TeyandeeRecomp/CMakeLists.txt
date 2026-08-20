@@ -8,7 +8,13 @@ set(NESRECOMP_ROOT ${CMAKE_SOURCE_DIR}/nesrecomp)
 
 # ---- Nestopia Oracle (optional) ----
 option(ENABLE_NESTOPIA_ORACLE "Build with Nestopia emulator oracle for verify mode" OFF)
+option(NESRECOMP_REVERSE_DEBUG "Build with generated store/block reverse-debug hooks" OFF)
 set(NESTOPIA_DIR "${CMAKE_SOURCE_DIR}/nestopia-core")
+
+# Keep reverse-debug generated sources out of the normal generated/ tree.  The
+# transition-debug build helper points this at build_transition_debug/generated.
+set(TEYANDEE_GENERATED_DIR "${CMAKE_SOURCE_DIR}/generated" CACHE PATH
+    "Directory containing teyandee_full.c and teyandee_dispatch.c")
 
 # ---- nesrecomp pin check ----
 # When nesrecomp is a plain directory (zip extract / local junction without .git),
@@ -91,11 +97,15 @@ add_executable(TeyandeeRecomp
     override_text.c
     ${NESRECOMP_RUNNER_ROOT}/src/override_chr.c
     ${NESRECOMP_RUNNER_ROOT}/src/chr_codec.c
-    generated/teyandee_full.c
-    generated/teyandee_dispatch.c
+    ${TEYANDEE_GENERATED_DIR}/teyandee_full.c
+    ${TEYANDEE_GENERATED_DIR}/teyandee_dispatch.c
 )
 
 target_compile_definitions(TeyandeeRecomp PRIVATE RECOMP_STACK_TRACKING)
+
+if(NESRECOMP_REVERSE_DEBUG)
+    target_compile_definitions(TeyandeeRecomp PRIVATE NESRECOMP_REVERSE_DEBUG=1)
+endif()
 
 target_include_directories(TeyandeeRecomp PRIVATE
     ${NESRECOMP_RUNNER_INCLUDE_DIRS}

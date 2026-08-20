@@ -2,14 +2,25 @@
  * Run NESRecomp on a ROM and parse the results.
  */
 import { execFileSync } from "child_process";
-import { existsSync, readFileSync, writeFileSync, mkdtempSync } from "fs";
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+  mkdtempSync,
+} from "fs";
 import { join, dirname, resolve } from "path";
 import { tmpdir } from "os";
 
-const NESRECOMP_EXE = resolve(
-  import.meta.dirname,
-  "../../build/recompiler/Release/NESRecomp.exe"
-);
+const NESRECOMP_CANDIDATES = [
+  process.env.NESRECOMP_EXE,
+  resolve(import.meta.dirname, "../../build/recompiler/NESRecomp.exe"),
+  resolve(import.meta.dirname, "../../build/recompiler/Release/NESRecomp.exe"),
+].filter((path): path is string => Boolean(path));
+
+const NESRECOMP_EXE =
+  NESRECOMP_CANDIDATES.find((path) => existsSync(path)) ??
+  NESRECOMP_CANDIDATES[0];
 
 export interface RecompResult {
   functionCount: number;
@@ -30,7 +41,8 @@ export function recompile(
 ): RecompResult {
   if (!existsSync(NESRECOMP_EXE)) {
     throw new Error(
-      `NESRecomp.exe not found at ${NESRECOMP_EXE} — build the recompiler first`
+      `NESRecomp.exe not found (checked ${NESRECOMP_CANDIDATES.join(", ")}) ` +
+        "— build the recompiler first or set NESRECOMP_EXE"
     );
   }
 
@@ -57,25 +69,25 @@ export function recompile(
   const functionCount = funcMatch ? parseInt(funcMatch[1], 10) : 0;
 
   // Find generated files (prefix defaults to ROM name)
-  const dispatchFiles = existsSync(generatedDir)
-    ? require("fs")
-        .readdirSync(generatedDir)
-        .filter((f: string) => f.endsWith("_dispatch.c"))
+  const generatedFiles = existsSync(generatedDir)
+    ? readdirSync(generatedDir)
     : [];
-  const fullFiles = existsSync(generatedDir)
-    ? require("fs")
-        .readdirSync(generatedDir)
-        .filter((f: string) => f.endsWith("_full.c"))
-    : [];
+  const dispatchFiles = generatedFiles.filter((f) => f.endsWith("_dispatch.c"));
+  const fullFiles = generatedFiles.filter((f) => f.endsWith("_full.c"));
+  const fullBankFiles = generatedFiles
+    .filter((f) => /_full_bank\d+\.c$/.test(f))
+    .sort();
 
   const dispatchC =
     dispatchFiles.length > 0
       ? readFileSync(join(generatedDir, dispatchFiles[0]), "utf-8")
       : "";
-  const fullC =
-    fullFiles.length > 0
-      ? readFileSync(join(generatedDir, fullFiles[0]), "utf-8")
-      : "";
+  // The aggregate *_full.c now #includes one generated part per PRG bank.
+  // Concatenate those parts for source assertions so tests inspect the actual
+  // generated function bodies as well as the aggregate translation unit.
+  const fullC = [...fullFiles, ...fullBankFiles]
+    .map((file) => readFileSync(join(generatedDir, file), "utf-8"))
+    .join("\n");
 
   // Extract dispatch entries
   const dispatchEntries = (dispatchC.match(/case 0x([0-9A-Fa-f]+):/g) || [])

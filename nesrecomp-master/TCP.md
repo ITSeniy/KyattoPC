@@ -144,14 +144,14 @@ with `-DNESRECOMP_REVERSE_DEBUG=ON`. Implementation in
 | Command | Purpose |
 |---------|---------|
 | `trace_calls` / `trace_calls_reset` | Arm / reset. |
-| `get_call_trace` `{from,to,max}` | Dump `(frame, func, caller)`. |
+| `get_call_trace` `{start,from,to,max}` | Dump `(frame, func, caller)`; `start` is the chronological ring offset for paging. |
 
 **Tier 2 — block-level trace** (256 k entries, A/X/Y/P captured per block):
 | Command | Purpose |
 |---------|---------|
 | `trace_blocks` / `trace_blocks_reset` | Arm / reset. |
 | `trace_blocks_range` `{lo,hi}` | Restrict to a PC range (up to 8). |
-| `get_block_trace` `{from,to,max}` | Dump `(frame, pc, func, a, x, y, p)`. |
+| `get_block_trace` `{start,from,to,max}` | Dump `(frame, pc, func, a, x, y, p)`; `start` is the chronological ring offset for paging. |
 
 **Tier 2.5 — block breakpoints + synchronous WRAM watchpoints**
 (supersedes legacy `watch`/`follow`/`watch_s`):
@@ -224,6 +224,8 @@ Removed in the Tiers-1-3 cleanup. If a script still calls these, migrate:
 | Command | Purpose |
 |---------|---------|
 | `watchdog_status` | Why the watchdog tripped (if enabled). |
+| `fring` | Recent frame/VBlank/OAM-DMA events and phase digests. |
+| `dispatch_ring` `{n}` | Last 1–128 dispatch events plus live tail-trampoline state. Each entry includes logical JSR context `ctx`. Event kinds: `C` JSR/dynamic call, `T` new JMP tail, `M` tail-cycle match/defer request, `D` deferred lap consumed and driven. |
 | `call_stack` | Recompiled call stack (if `RECOMP_STACK_TRACKING` enabled). |
 | `dispatch_miss_info` | Dispatch table misses (if `ENABLE_DISPATCH_MISS_TRACKING`). |
 

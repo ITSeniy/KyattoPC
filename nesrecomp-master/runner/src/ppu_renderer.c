@@ -16,6 +16,9 @@ extern void save_png(const char *path, int w, int h, const void *rgb, int stride
 
 /* Debug toggle — when set, suppress MMC3 IRQ firing during rendering. */
 int g_disable_render_irq = 0;
+/* Game-selectable compensation for handlers whose visible writes occur more
+ * than one scanline after the MMC3 A12 edge. Only 0/1 is currently modeled. */
+int g_render_irq_defer_scanlines = 0;
 extern uint16_t g_ppuaddr;  /* PPU address register (runtime.c) */
 
 /* Render-IRQ diagnostic: track last IRQ fire during rendering */
@@ -357,64 +360,66 @@ int ppu_predict_spr0_hit_scanline(void) {
     return 240;
 }
 
-/* Service the MMC3 scanline IRQ for ONE PPU scanline: clock the counter and,
- * if it fires (and IRQ rendering isn't suppressed), dispatch the game's IRQ
- * handler — pushing P/PCL/PCH in NMI convention so RTI pops them, and syncing
+/* Dispatch an MMC3 render IRQ — pushing P/PCL/PCH in NMI convention so RTI
+ * pops them, and syncing
  * scroll from the PPU v register if the handler wrote $2006. The handler may
  * swap CHR banks / scroll mid-frame. `reported_scanline` is recorded for the
- * IRQ diagnostics (pass -1 for the pre-render line).
+ * IRQ diagnostics (pass -1 for the pre-render line). */
+static void dispatch_mmc3_scanline_irq(int reported_scanline) {
+    /* Push PCH, PCL, P — same convention as NMI so RTI can pop them */
+    uint8_t p_irq = (uint8_t)((g_cpu.N<<7)|(g_cpu.V<<6)|(1<<5)|
+                               (g_cpu.D<<3)|(g_cpu.I<<2)|(g_cpu.Z<<1)|g_cpu.C);
+    g_render_irq_ppuctrl_before = g_ppuctrl;
+    g_ram[0x100+g_cpu.S] = 0x00;    g_cpu.S--;  /* PCH */
+    g_ram[0x100+g_cpu.S] = 0x00;    g_cpu.S--;  /* PCL */
+    g_ram[0x100+g_cpu.S] = p_irq;   g_cpu.S--;  /* P   */
+    { uint16_t v_before = g_ppuaddr;
+    func_IRQ();
+    /* Mid-frame scroll after IRQ (Teyandee cutscene multi-split / shake):
+     *   $2006/$2006 → v (which nametable band: city layers vs dialog Y)
+     *   $2000       → NT bits ($045F; shake X overflow) — must stick
+     *   $2005/$2005 → full scroll X ($0449, parallax+shake); Y written 0
+     *                 (t-only on real HW mid-render; see g_ppu_mid_frame_render)
+     * Scanline renderer: Y from v, X from final $2005, keep $2000 ctrl.
+     * Using only v loses parallax X; applying $2005 Y=0 used to wipe the
+     * $2006 Y and mis-fetch a garbage tile-row at dialog / shake splits. */
+    if (g_ppuaddr != v_before) {
+        uint8_t ctrl = g_ppuctrl;
+        uint8_t sx = g_ppuscroll_x;
+        int had_2005 = runtime_scroll_from_t_valid();
+        runtime_sync_scroll_from_v();
+        /* Keep $2000 for pattern tables + NT X (9-bit scroll via $045F);
+         * NT Y for display stays from v ($2006) — mid-frame $2000 does not
+         * rewrite v's vertical nametable bit on real PPU. */
+        {
+            uint8_t nt_y = (uint8_t)(g_ppuctrl & 0x02);
+            g_ppuctrl = (uint8_t)((ctrl & (uint8_t)~0x02) | nt_y);
+        }
+        if (had_2005)
+            g_ppuscroll_x = sx;
+        /* Even if scroll_y number is unchanged (both sides Y=0), re-base
+         * abs_nt_y on the next painted line — $2006 is an absolute Y load. */
+        g_ppu_force_y_reload = 1;
+    }
+    /* $2005-only (status bar FC22 / X-only scene split): X already in
+     * g_ppuscroll_x; Y left unchanged mid-frame so abs_nt_y continues. */
+    }
+    g_render_irq_fired    = 1;
+    g_render_irq_scanline = reported_scanline;
+    g_render_irq_ppuctrl_after  = g_ppuctrl;
+    g_render_irq_scrollx_after  = g_ppuscroll_x;
+    g_render_irq_scrolly_after  = g_ppuscroll_y;
+}
+
+/* Clock the MMC3 scanline counter for ONE PPU scanline.
  *
  * Hardware clocks this counter via the A12 rising edge on the pre-render line
  * (-1) AND each visible line (0-239) = 241 clocks/frame. Clocking only 0-239
  * left the counter one clock behind, firing the IRQ ~1 scanline late vs the
  * oracle (IRQ_SLICE_001: recomp scanline 0 vs Mesen pre-render -1). For
  * non-MMC3 mappers mapper_clock_scanline() returns 0, so this is a no-op. */
-static void service_mmc3_scanline_irq(int reported_scanline) {
-    if (mapper_clock_scanline() && !g_disable_render_irq) {
-        /* Push PCH, PCL, P — same convention as NMI so RTI can pop them */
-        uint8_t p_irq = (uint8_t)((g_cpu.N<<7)|(g_cpu.V<<6)|(1<<5)|
-                                   (g_cpu.D<<3)|(g_cpu.I<<2)|(g_cpu.Z<<1)|g_cpu.C);
-        g_render_irq_ppuctrl_before = g_ppuctrl;
-        g_ram[0x100+g_cpu.S] = 0x00;    g_cpu.S--;  /* PCH */
-        g_ram[0x100+g_cpu.S] = 0x00;    g_cpu.S--;  /* PCL */
-        g_ram[0x100+g_cpu.S] = p_irq;   g_cpu.S--;  /* P   */
-        { uint16_t v_before = g_ppuaddr;
-        func_IRQ();
-        /* Mid-frame scroll after IRQ (Teyandee cutscene multi-split / shake):
-         *   $2006/$2006 → v (which nametable band: city layers vs dialog Y)
-         *   $2000       → NT bits ($045F; shake X overflow) — must stick
-         *   $2005/$2005 → full scroll X ($0449, parallax+shake); Y written 0
-         *                 (t-only on real HW mid-render; see g_ppu_mid_frame_render)
-         * Scanline renderer: Y from v, X from final $2005, keep $2000 ctrl.
-         * Using only v loses parallax X; applying $2005 Y=0 used to wipe the
-         * $2006 Y and mis-fetch a garbage tile-row at dialog / shake splits. */
-        if (g_ppuaddr != v_before) {
-            uint8_t ctrl = g_ppuctrl;
-            uint8_t sx = g_ppuscroll_x;
-            int had_2005 = runtime_scroll_from_t_valid();
-            runtime_sync_scroll_from_v();
-            /* Keep $2000 for pattern tables + NT X (9-bit scroll via $045F);
-             * NT Y for display stays from v ($2006) — mid-frame $2000 does not
-             * rewrite v's vertical nametable bit on real PPU. */
-            {
-                uint8_t nt_y = (uint8_t)(g_ppuctrl & 0x02);
-                g_ppuctrl = (uint8_t)((ctrl & (uint8_t)~0x02) | nt_y);
-            }
-            if (had_2005)
-                g_ppuscroll_x = sx;
-            /* Even if scroll_y number is unchanged (both sides Y=0), re-base
-             * abs_nt_y on the next painted line — $2006 is an absolute Y load. */
-            g_ppu_force_y_reload = 1;
-        }
-        /* $2005-only (status bar FC22 / X-only scene split): X already in
-         * g_ppuscroll_x; Y left unchanged mid-frame so abs_nt_y continues. */
-        }
-        g_render_irq_fired    = 1;
-        g_render_irq_scanline = reported_scanline;
-        g_render_irq_ppuctrl_after  = g_ppuctrl;
-        g_render_irq_scrollx_after  = g_ppuscroll_x;
-        g_render_irq_scrolly_after  = g_ppuscroll_y;
-    }
+static int clock_mmc3_scanline_irq(void) {
+    return mapper_clock_scanline() && !g_disable_render_irq;
 }
 
 void ppu_render_frame(uint32_t *framebuf) {
@@ -603,11 +608,23 @@ void ppu_render_frame(uint32_t *framebuf) {
          * split (dialog seam, status-bar border, shake tear). Clock order is
          * now: pre-render, then for each sy { draw; clock }. Still 241 clocks.
          *
+         * Some handlers do not reach their visible CHR/scroll writes until
+         * after the following scanline has also been fetched. With the opt-in
+         * one-line defer, a fired IRQ is held through that row and dispatched
+         * immediately before its end-of-line A12 clock.
+         *
          * g_ppu_mid_frame_render: mid-frame $2005 Y must not clobber display Y
          * (see runtime.c $2005 handler). */
         g_ppu_mid_frame_render = 1;
         g_ppu_force_y_reload = 0;
-        service_mmc3_scanline_irq(-1);
+        int irq_defer = g_render_irq_defer_scanlines > 0 ? 1 : 0;
+        int pending_irq_scanline = -2; /* -2 = none; -1 is pre-render */
+        if (clock_mmc3_scanline_irq()) {
+            if (irq_defer)
+                pending_irq_scanline = -1;
+            else
+                dispatch_mmc3_scanline_irq(-1);
+        }
 
         for (int sy = 0; sy < 240; sy++) {
             /* Choose scroll source for this scanline (state from prior IRQ).
@@ -622,7 +639,8 @@ void ppu_render_frame(uint32_t *framebuf) {
             int chr_base = (ppuctrl_row & 0x10) ? 0x1000 : 0x0000;
 
             /* Capture post-IRQ rendering state on the first line that uses it */
-            if (g_render_irq_fired && sy == g_render_irq_scanline + 1) {
+            if (g_render_irq_fired &&
+                sy == g_render_irq_scanline + 1 + irq_defer) {
                 g_render_post_irq_ppuctrl_row = ppuctrl_row;
                 g_render_post_irq_chr_base = chr_base;
                 g_render_post_irq_use_hud = use_hud;
@@ -685,7 +703,8 @@ void ppu_render_frame(uint32_t *framebuf) {
             }
 
             /* Capture nt_row for post-IRQ diagnostic (first line after fire) */
-            if (g_render_irq_fired && sy == g_render_irq_scanline + 1) {
+            if (g_render_irq_fired &&
+                sy == g_render_irq_scanline + 1 + irq_defer) {
                 g_render_post_irq_phys_nt = nt_row; /* store nt_row; phys_nt computed per-pixel */
             }
 
@@ -761,10 +780,26 @@ void ppu_render_frame(uint32_t *framebuf) {
                 abs_nt_y++;
             }
 
-            /* A12 clock at end of this scanline (hardware timing). Scroll/CHR
-             * from the handler apply when the next iteration samples state. */
-            service_mmc3_scanline_irq(sy);
+            /* Deliver a deferred IRQ only after this extra row has kept the
+             * pre-IRQ state, but before this row's A12 clock so handler mapper
+             * writes still affect that clock exactly as they would in-frame. */
+            if (pending_irq_scanline != -2) {
+                dispatch_mmc3_scanline_irq(pending_irq_scanline);
+                pending_irq_scanline = -2;
+            }
+
+            /* A12 clock at end of this scanline (hardware timing). */
+            if (clock_mmc3_scanline_irq()) {
+                if (irq_defer)
+                    pending_irq_scanline = sy;
+                else
+                    dispatch_mmc3_scanline_irq(sy);
+            }
         }
+        /* Preserve the CPU/mapper state if an IRQ fired on the last visible
+         * line; there is no later visible row on which to deliver it. */
+        if (pending_irq_scanline != -2)
+            dispatch_mmc3_scanline_irq(pending_irq_scanline);
         g_ppu_mid_frame_render = 0;
     }
 
@@ -922,7 +957,9 @@ render_sprites:
              * window. Per-row selection mirrors hardware, where sprite
              * pattern fetches happen on each scanline. */
             const uint8_t *chr_src =
-                (g_render_irq_fired && py >= g_render_irq_scanline + 1)
+                (g_render_irq_fired &&
+                 py >= g_render_irq_scanline + 1 +
+                       (g_render_irq_defer_scanlines > 0 ? 1 : 0))
                     ? g_chr_ram : s_chr_pre_irq;
             uint8_t lo = chr_src[chr_off];
             uint8_t hi = chr_src[chr_off + 8];

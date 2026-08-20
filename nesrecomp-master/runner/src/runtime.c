@@ -129,6 +129,7 @@ static uint16_t s_ppu_v_at_2006 = 0;  /* v captured at $2006 second write, befor
 static int      s_scroll_2005_complete = 0; /* 1 if $2005 pair completed after last $2006 pair */
 
 uint64_t g_frame_count = 0;
+int g_runner_expected_exit = 0;
 
 /* ---- Controller state ---- */
 uint8_t g_controller1_buttons = 0;
@@ -1785,11 +1786,51 @@ uint16_t g_code_window_base = 0xE000;
 static int32_t s_tail_pending = -1;
 static int     s_tail_caller  = -1;
 
+/* Unique logical context for each real 6502 JSR.  Most generated JSRs are
+ * direct C calls and intentionally do not push g_cpu.S, so S is not a call
+ * identity in those builds.  A monotonically assigned token is restored on
+ * return; every JMP tail in the callee inherits it. */
+static uint64_t s_jsr_context = 0;
+static uint64_t s_jsr_context_next = 0;
+static uint64_t s_jsr_unwind_context = 0;
+
+uint64_t nes_jsr_context_enter(void) {
+    uint64_t previous = s_jsr_context;
+    s_jsr_context_next++;
+    if (s_jsr_context_next == 0) s_jsr_context_next++;
+    s_jsr_context = s_jsr_context_next;
+    return previous;
+}
+
+int nes_jsr_context_leave(uint64_t previous) {
+    uint64_t leaving = s_jsr_context;
+    s_jsr_context = previous;
+    if (leaving != 0 && s_jsr_unwind_context == leaving) {
+        s_jsr_unwind_context = 0;
+        return 1;
+    }
+    return 0;
+}
+
+uint64_t nes_jsr_context_current(void) {
+    return s_jsr_context;
+}
+
+void nes_jsr_context_unwind_current(void) {
+    /* PLA; PLA discards exactly one 6502 JSR return address.  In the direct-C
+     * call model there is no corresponding entry in g_cpu.S, so remember the
+     * logical frame instead.  Nested JSRs made by the JMP target may come and
+     * go before control reaches this frame; leave() only consumes an exact
+     * token match. */
+    if (s_jsr_context != 0) s_jsr_unwind_context = s_jsr_context;
+}
+
 /* Always-on ring of the last dispatches (addr, caller_bank, S, depth, kind)
  * for post-mortem attribution — dumped by launcher.c's unexpected-exit
- * handler. Kind: 'C'=call (JSR), 'T'=tail (JMP), 'D'=deferred lap. */
+ * handler. Kind: 'C'=call (JSR), 'T'=tail (JMP), 'M'=cycle match/defer,
+ * 'D'=deferred lap consumed and driven. */
 #define DISPATCH_RING_N 512
-typedef struct { uint16_t addr; int16_t cb; uint8_t s; uint8_t depth; char kind; uint16_t wb; } DispatchRingEnt;
+typedef struct { uint16_t addr; int16_t cb; uint8_t s; uint8_t depth; char kind; uint16_t wb; uint64_t ctx; } DispatchRingEnt;
 static DispatchRingEnt s_dring[DISPATCH_RING_N];
 static uint32_t s_dring_head = 0;
 
@@ -1799,7 +1840,25 @@ static void dring_push(uint16_t addr, int cb, char kind) {
     e->depth = (uint8_t)(g_nes_dispatch_depth > 255 ? 255 : g_nes_dispatch_depth);
     e->kind = kind;
     e->wb = g_code_window_base;
+    e->ctx = s_jsr_context;
     s_dring_head++;
+}
+
+int nes_dring_last(int n, NesDispatchEvt *dst) {
+    uint32_t avail = s_dring_head < DISPATCH_RING_N ? s_dring_head : DISPATCH_RING_N;
+    uint32_t take = (n > 0 && (uint32_t)n < avail) ? (uint32_t)n : avail;
+    for (uint32_t i = 0; i < take; i++) {
+        const DispatchRingEnt *src =
+            &s_dring[(s_dring_head - take + i) % DISPATCH_RING_N];
+        dst[i].addr         = src->addr;
+        dst[i].caller_bank  = src->cb;
+        dst[i].window_base  = src->wb;
+        dst[i].s            = src->s;
+        dst[i].depth        = src->depth;
+        dst[i].jsr_context  = src->ctx;
+        dst[i].kind         = src->kind;
+    }
+    return (int)take;
 }
 
 /* Context markers from the runner (NMI enter/exit etc.) so the dispatch ring
@@ -1868,10 +1927,12 @@ void nes_fring_init_dump(void) {
 
 void nes_dump_dispatch_ring(void) {
     uint32_t n = s_dring_head < DISPATCH_RING_N ? s_dring_head : DISPATCH_RING_N;
-    printf("[EXIT] last %u dispatches (oldest first; kind C=jsr T=tail D=driven-lap):\n", n);
+    printf("[EXIT] last %u dispatches (oldest first; kind C=jsr T=tail M=cycle-match D=driven-lap):\n", n);
     for (uint32_t i = 0; i < n; i++) {
         const DispatchRingEnt *e = &s_dring[(s_dring_head - n + i) % DISPATCH_RING_N];
-        printf("  %c $%04X cb=%d S=$%02X depth=%u wb=$%04X\n", e->kind, e->addr, e->cb, e->s, e->depth, e->wb);
+        printf("  %c $%04X cb=%d S=$%02X depth=%u ctx=%llu wb=$%04X\n",
+               e->kind, e->addr, e->cb, e->s, e->depth,
+               (unsigned long long)e->ctx, e->wb);
     }
     fflush(stdout);
 }
@@ -1892,7 +1953,8 @@ int nes_dispatch_call(uint16_t addr, int caller_bank) {
  * control unwinds through the live C frames exactly as the 6502 expects; C
  * depth stays bounded by real JSR depth). The one unbounded shape is a JMP
  * CYCLE: a loop lap across functions adds C frames with ZERO net 6502-stack
- * change (same tail target, same S, already active in this chain). On
+ * change (same tail target, same S and same logical JSR context, already
+ * active in this chain). On
  * detecting a lap, DEFER to the MATCHING ancestor tail frame: the lap body's
  * C frames between the two tails represent zero net 6502 stack, so unwinding
  * just them (via return/bail propagation) discards nothing, and the ancestor
@@ -1903,16 +1965,31 @@ int nes_dispatch_call(uint16_t addr, int caller_bank) {
  * unexpected exit when Video_Misc_Updates2's terminator RTS had no caller
  * frame left to resume). */
 #define TAIL_ACTIVE_MAX 64
-static struct { uint16_t addr; uint8_t s; } s_tail_active[TAIL_ACTIVE_MAX];
+static struct { uint16_t addr; uint8_t s; uint64_t ctx; } s_tail_active[TAIL_ACTIVE_MAX];
 static int s_tail_active_n = 0;
 static int s_tail_pending_slot = -1;
+
+int nes_tail_debug_state(int32_t *pending, int *pending_slot, int *caller_bank,
+                         NesTailActive *active, int max_active) {
+    if (pending) *pending = s_tail_pending;
+    if (pending_slot) *pending_slot = s_tail_pending_slot;
+    if (caller_bank) *caller_bank = s_tail_caller;
+    int take = s_tail_active_n;
+    if (take > max_active) take = max_active;
+    for (int i = 0; i < take; i++) {
+        active[i].addr = s_tail_active[i].addr;
+        active[i].s = s_tail_active[i].s;
+        active[i].jsr_context = s_tail_active[i].ctx;
+    }
+    return take;
+}
 
 int call_by_address_tail(uint16_t addr, int caller_bank) {
     /* Env-gated tail-drift diagnostic (NESRECOMP_TAILDBG="loAddr:hiAddr"):
      * logs the first ~60 tail entries whose addr is in [lo,hi] with S and
      * active-tail count, so a JMP-loop that fails to flatten (because S drifts
-     * per lap and the (addr,S) cycle detector never matches) shows its exact
-     * S trajectory without pause/step. */
+     * per lap and the (addr,S,context) cycle detector never matches) shows
+     * its exact S/context trajectory without pause/step. */
     {
         static int s_on = -1; static uint16_t s_lo = 0, s_hi = 0; static int s_lines = 0;
         if (s_on < 0) {
@@ -1924,14 +2001,22 @@ int call_by_address_tail(uint16_t addr, int caller_bank) {
         if (s_on && addr >= s_lo && addr <= s_hi && s_lines < 60) {
             int match = -1;
             for (int i = 0; i < s_tail_active_n; i++)
-                if (s_tail_active[i].addr == addr && s_tail_active[i].s == g_cpu.S) { match = i; break; }
-            fprintf(stderr, "[taildbg] addr=$%04X S=$%02X active_n=%d match=%d frame=%llu\n",
-                    addr, g_cpu.S, s_tail_active_n, match, (unsigned long long)g_frame_count);
+                if (s_tail_active[i].addr == addr && s_tail_active[i].s == g_cpu.S &&
+                    s_tail_active[i].ctx == s_jsr_context) { match = i; break; }
+            fprintf(stderr, "[taildbg] addr=$%04X S=$%02X ctx=%llu active_n=%d match=%d frame=%llu\n",
+                    addr, g_cpu.S, (unsigned long long)s_jsr_context,
+                    s_tail_active_n, match, (unsigned long long)g_frame_count);
             fflush(stderr); s_lines++;
         }
     }
     for (int i = 0; i < s_tail_active_n; i++) {
-        if (s_tail_active[i].addr == addr && s_tail_active[i].s == g_cpu.S) {
+        if (s_tail_active[i].addr == addr && s_tail_active[i].s == g_cpu.S &&
+            s_tail_active[i].ctx == s_jsr_context) {
+            /* Record the request separately from the later driven lap.  This
+             * exposes false cycle matches in no-push-all-jsr builds:
+             * the matching ancestor may not consume the request until many
+             * ordinary calls after the point where it was created. */
+            dring_push(addr, caller_bank, 'M');
             s_tail_pending      = addr;
             s_tail_pending_slot = i;
             s_tail_caller       = caller_bank;
@@ -1943,6 +2028,7 @@ int call_by_address_tail(uint16_t addr, int caller_bank) {
         slot = s_tail_active_n++;
         s_tail_active[slot].addr = addr;
         s_tail_active[slot].s    = g_cpu.S;
+        s_tail_active[slot].ctx  = s_jsr_context;
     }
     dring_push(addr, caller_bank, 'T');
     int r;

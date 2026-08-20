@@ -385,8 +385,9 @@ static void cmd_trace_calls_reset(int id, const char *json) {
     debug_server_send_fmt("{\"id\":%d,\"ok\":true}", id);
 }
 static void cmd_get_call_trace(int id, const char *json) {
-    uint32_t max_n = 256, from = 0, to = 0xFFFF;
+    uint32_t max_n = 256, start = 0, from = 0, to = 0xFFFF;
     json_u32(json, "max", &max_n);
+    json_u32(json, "start", &start);
     json_u32(json, "from", &from);
     json_u32(json, "to", &to);
     if (max_n == 0 || max_n > 4096) max_n = 256;
@@ -396,7 +397,7 @@ static void cmd_get_call_trace(int id, const char *json) {
     if (!buf) { debug_server_send_fmt("{\"id\":%d,\"ok\":false,\"error\":\"oom\"}", id); return; }
     int pos = 0; pos += snprintf(buf + pos, bufsz - pos, "[");
     uint32_t emitted = 0;
-    for (uint64_t i = 0; i < s_call_count && emitted < max_n; i++) {
+    for (uint64_t i = start; i < s_call_count && emitted < max_n; i++) {
         uint64_t gidx = oldest + i;
         const RdbCallEntry *e = &s_call_ring[gidx & (RDB_CALL_RING_SIZE - 1)];
         if (e->func < from || e->func > to) continue;
@@ -438,8 +439,9 @@ static void cmd_trace_blocks_range(int id, const char *json) {
     debug_server_send_fmt("{\"id\":%d,\"ok\":true,\"nranges\":%d}", id, s_block_pc_nranges);
 }
 static void cmd_get_block_trace(int id, const char *json) {
-    uint32_t max_n = 256, from = 0, to = 0xFFFF;
+    uint32_t max_n = 256, start = 0, from = 0, to = 0xFFFF;
     json_u32(json, "max", &max_n);
+    json_u32(json, "start", &start);
     json_u32(json, "from", &from);
     json_u32(json, "to", &to);
     if (max_n == 0 || max_n > 4096) max_n = 256;
@@ -449,7 +451,7 @@ static void cmd_get_block_trace(int id, const char *json) {
     if (!buf) { debug_server_send_fmt("{\"id\":%d,\"ok\":false,\"error\":\"oom\"}", id); return; }
     int pos = 0; pos += snprintf(buf + pos, bufsz - pos, "[");
     uint32_t emitted = 0;
-    for (uint64_t i = 0; i < s_block_count && emitted < max_n; i++) {
+    for (uint64_t i = start; i < s_block_count && emitted < max_n; i++) {
         uint64_t gidx = oldest + i;
         const RdbBlockEntry *e = &s_block_ring[gidx & (RDB_BLOCK_RING_SIZE - 1)];
         if (e->pc < from || e->pc > to) continue;

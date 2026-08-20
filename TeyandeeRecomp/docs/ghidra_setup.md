@@ -4,7 +4,7 @@
 
 | Item | Value |
 |------|-------|
-| Ghidra | `C:\Users\ITSeniy\ghidra_12.1.2_PUBLIC` |
+| Ghidra | Set `GHIDRA_HOME` to your extracted Ghidra directory |
 | Project | `TeyandeeRecomp/ghidra/teyandee_nesrecomp.gpr` |
 | bank07 | imported @ `$C000`, auto-analyzed, labeled |
 | bank01 | imported @ `$8000` — boot mode dispatch in **high** half (`$A000+`) |
@@ -16,12 +16,13 @@ Re-run import/labels anytime:
 
 ```bat
 cd TeyandeeRecomp
+set GHIDRA_HOME=C:\Tools\ghidra_12.0_PUBLIC
 tools\ghidra_import_bank07.bat
 ```
 
 ## Open the project (GUI)
 
-1. `C:\Users\ITSeniy\ghidra_12.1.2_PUBLIC\ghidraRun.bat`
+1. `%GHIDRA_HOME%\ghidraRun.bat`
 2. **File → Open Project** → `TeyandeeRecomp\ghidra\teyandee_nesrecomp.gpr`
 3. Double-click **bank07.bin**
 4. **G** (Go To): `FF90`, `C4FA`, `FC22`, `C0B1`
@@ -58,7 +59,8 @@ Optional AI bridge (for this agent to query listings):
 | [bethington/ghidra-mcp](https://github.com/bethington/ghidra-mcp) | Larger tool surface |
 | Project example | `nesrecomp/.mcp.json.example` uses SSE `http://localhost:9015/sse` per fixed bank |
 
-After the MCP bridge is up, add it to `~/.grok/config.toml` (or project `.mcp.json`) and reconnect.
+After the MCP bridge is up, add it to your MCP client configuration (or the
+project `.mcp.json`) and reconnect.
 
 ## Create project
 
@@ -150,8 +152,8 @@ analyzeHeadless ghidra teyandee_nesrecomp -import banks\bank07.bin ^
 
 (`tools/ghidra_label_boot.py` is a Jython post-script in this repo.)
 
-## What we need from you next
+## Continuing the analysis
 
-1. Path to Ghidra (or confirm install).
-2. After bank07 is open + analyzed: start MCP bridge **or** export listing of `$FF90`, `$C0B1`, `$C4FA`, `$C513`, `$FC22`.
-3. Then we seed more of `game.toml` and chase smoke misses with real symbols.
+After bank07 is open and analyzed, start an MCP bridge or export listings for
+the address ranges under investigation. Record any confirmed entry points or
+data regions in `game.toml` and the corresponding document under `docs/`.

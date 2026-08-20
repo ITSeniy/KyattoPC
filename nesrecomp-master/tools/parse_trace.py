@@ -1,7 +1,13 @@
+#!/usr/bin/env python3
+import argparse
 import json
+from pathlib import Path
 
-with open(r'C:/Users/Matthew/.claude/projects/F--Projects-nesrecomp/782ed346-7c26-4c46-b19e-18550e075031/tool-results/mcp-mesen-mesen_trace-1773535726417.txt', 'r') as f:
-    raw = f.read()
+parser = argparse.ArgumentParser(description="Summarize a JSON-wrapped Mesen frame trace")
+parser.add_argument("trace", type=Path, help="path to the captured trace JSON")
+args = parser.parse_args()
+
+raw = args.trace.read_text(encoding="utf-8")
 
 outer = json.loads(raw)
 text = ''.join(item.get('text','') for item in outer if isinstance(item, dict))

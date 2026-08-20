@@ -1,6 +1,6 @@
 @echo off
 setlocal
-set "GHIDRA_HOME=C:\Users\ITSeniy\ghidra_12.1.2_PUBLIC"
+if not "%~1"=="" set "GHIDRA_HOME=%~1"
 set "PROJ_DIR=%~dp0..\ghidra"
 set "PROJ_NAME=teyandee_nesrecomp"
 set "BANK07=%~dp0..\banks\bank07.bin"
@@ -10,8 +10,14 @@ if not exist "%BANK07%" (
   echo Missing %BANK07% — run: python tools\extract_banks.py ^<rom^>
   exit /b 1
 )
+if "%GHIDRA_HOME%"=="" (
+  echo GHIDRA_HOME is not set.
+  echo Set it in the environment or pass the Ghidra directory as argument 1.
+  echo Example: tools\ghidra_import_bank07.bat C:\Tools\ghidra_12.0_PUBLIC
+  exit /b 1
+)
 if not exist "%GHIDRA_HOME%\support\analyzeHeadless.bat" (
-  echo analyzeHeadless not found under %GHIDRA_HOME%
+  echo analyzeHeadless.bat not found under "%GHIDRA_HOME%"
   exit /b 1
 )
 

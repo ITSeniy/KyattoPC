@@ -789,6 +789,52 @@ static void handle_fring(int id, const char *json)
     free(ev);
 }
 
+static void handle_dispatch_ring(int id, const char *json)
+{
+    int n = json_get_int(json, "n", 96);
+    if (n < 1) n = 1;
+    if (n > 128) n = 128; /* keep one JSON line below the server send buffer */
+
+    NesDispatchEvt *ev = (NesDispatchEvt *)malloc((size_t)n * sizeof *ev);
+    if (!ev) { send_err(id, "alloc failed"); return; }
+    int got = nes_dring_last(n, ev);
+
+    NesTailActive active[64];
+    int32_t pending = -1;
+    int pending_slot = -1, caller_bank = -1;
+    int active_n = nes_tail_debug_state(&pending, &pending_slot, &caller_bank,
+                                        active, 64);
+
+    size_t bufsz = (size_t)got * 144 + (size_t)active_n * 80 + 512;
+    char *buf = (char *)malloc(bufsz);
+    if (!buf) { free(ev); send_err(id, "alloc failed"); return; }
+    int pos = snprintf(buf, bufsz,
+        "{\"id\":%d,\"ok\":true,\"tail\":{\"pending\":%d,"
+        "\"pending_slot\":%d,\"caller_bank\":%d,\"active\":[",
+        id, (int)pending, pending_slot, caller_bank);
+    for (int i = 0; i < active_n; i++) {
+        pos += snprintf(buf + pos, bufsz - (size_t)pos,
+            "%s{\"slot\":%d,\"addr\":\"0x%04X\",\"s\":\"0x%02X\","
+            "\"ctx\":%llu}",
+            i ? "," : "", i, active[i].addr, active[i].s,
+            (unsigned long long)active[i].jsr_context);
+    }
+    pos += snprintf(buf + pos, bufsz - (size_t)pos,
+                    "]},\"count\":%d,\"events\":[", got);
+    for (int i = 0; i < got; i++) {
+        pos += snprintf(buf + pos, bufsz - (size_t)pos,
+            "%s{\"k\":\"%c\",\"addr\":\"0x%04X\",\"cb\":%d,"
+            "\"s\":\"0x%02X\",\"depth\":%u,\"ctx\":%llu,\"wb\":\"0x%04X\"}",
+            i ? "," : "", ev[i].kind, ev[i].addr, ev[i].caller_bank,
+            ev[i].s, ev[i].depth, (unsigned long long)ev[i].jsr_context,
+            ev[i].window_base);
+    }
+    snprintf(buf + pos, bufsz - (size_t)pos, "]}");
+    send_line(buf);
+    free(buf);
+    free(ev);
+}
+
 static void handle_watchdog_status(int id, const char *json)
 {
     (void)json;
@@ -1589,6 +1635,7 @@ static const CmdEntry s_commands[] = {
     { "ppu_state",         "PPU registers + sprite-0 split state + render-IRQ diagnostics",               handle_ppu_state },
     { "watchdog_status",   "watchdog backward-branch counter and last firing reason",                     handle_watchdog_status },
     { "fring",             "frame-event ring: VBlank fires + $4014 OAM DMA with phase digests",           handle_fring },
+    { "dispatch_ring",     "recent JSR/JMP/deferred-lap dispatches plus live tail-trampoline state",      handle_dispatch_ring },
 #ifdef RECOMP_STACK_TRACKING
     { "call_stack",        "current recompile-stack (function-name shadow stack); main loops never pop", handle_call_stack },
 #endif

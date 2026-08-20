@@ -1018,6 +1018,18 @@ static void emit_call_target(FILE *f, const NESRom *rom, uint16_t addr,
     }
 }
 
+/* Emit a call target for a real 6502 JSR.  Unlike a JMP tail, a JSR creates a
+ * distinct logical return context even when the game's configuration uses the
+ * direct-call model and does not push g_cpu.S.  The runtime tail trampoline
+ * keys cycle laps on this token so a nested JSR re-entering the same tail
+ * target cannot defer work to an unrelated ancestor. */
+static void emit_jsr_call_target(FILE *f, const NESRom *rom, uint16_t addr,
+                                 int bank, int fixed_bank, EmitCallOpts opts) {
+    fprintf(f, "{ uint64_t _jsr_prev = nes_jsr_context_enter();\n");
+    emit_call_target(f, rom, addr, bank, fixed_bank, opts);
+    fprintf(f, "if (nes_jsr_context_leave(_jsr_prev)) return; }\n");
+}
+
 /* LDA/LDX/LDY: register loaded from immediate or memory. `reg` is 'A','X','Y'. */
 static void emit_load(FILE *f, char reg, AddrMode am, uint8_t op1, uint8_t op2,
                       uint16_t pc, uint16_t abs16, const GameConfig *cfg) {
@@ -1174,6 +1186,7 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                     fprintf(f, "g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);\n");
                     fprintf(f, "g_cpu.S++; g_cpu.A = g_ram[0x100 + g_cpu.S]; FLAG_NZ(g_cpu.A);\n");
                 }
+                fprintf(f, "nes_jsr_context_unwind_current();\n");
                 fprintf(f, "maybe_trigger_vblank(2); call_by_address_tail(0x%04X, -1); return;\n",
                         jtgt);
                 return 5; /* PLA + PLA + JMP abs */
@@ -1381,6 +1394,7 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                     const char *pr = cfg->push_all_jsr
                         ? "g_ram[0x100+g_cpu.S]=0; g_cpu.S--; g_ram[0x100+g_cpu.S]=0; g_cpu.S--; "
                         : "";
+                    fprintf(f, "{ uint64_t _jsr_prev = nes_jsr_context_enter();\n");
                     if (region == 'F') {
                         fprintf(f, "/* trampoline $%04X (mmc3 no-switch): target=$%04X */\n",
                                 tramp->addr, target);
@@ -1404,6 +1418,7 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                         fprintf(f, "  %s%s();\n", pr, nm);
                         fprintf(f, "  g_cpu.A=_sbank; %sfunc_%04X(); }\n", pr, bs_fn);
                     }
+                    fprintf(f, "if (nes_jsr_context_leave(_jsr_prev)) return; }\n");
                     return 3 + tramp->inline_bytes;
                 }
                 if (tramp) {
@@ -1414,6 +1429,7 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                     const char *breg = (tramp->bank_reg == 'A') ? "A" : "X";
                     fprintf(f, "/* trampoline $%04X dispatch: bank=%d addr=$%04X */\n",
                             tramp->addr, disp_bank, disp_addr);
+                    fprintf(f, "{ uint64_t _jsr_prev = nes_jsr_context_enter();\n");
                     fprintf(f, "{ uint8_t _sa=g_cpu.A,_sx=g_cpu.X,_sy=g_cpu.Y;\n");
                     if (tramp->bank_save_addr >= 0x8000)
                         fprintf(f, "  uint8_t _sbank=nes_read(0x%04X);\n", tramp->bank_save_addr);
@@ -1439,6 +1455,7 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                     fprintf(f, "  _sa=g_cpu.A;\n");
                     fprintf(f, "  g_cpu.%s=_sbank; %sfunc_%04X();\n", breg, pr, tramp->bs_fn_addr);
                     fprintf(f, "  g_cpu.A=_sa; }\n");
+                    fprintf(f, "if (nes_jsr_context_leave(_jsr_prev)) return; }\n");
                     return 3 + tramp->inline_bytes;
                 }
             }
@@ -1674,6 +1691,7 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                         fprintf(f, "g_cpu.Y = 2; FLAG_NZ(g_cpu.Y);\n");
                     }
                     if (ipp->call) {
+                        fprintf(f, "{ uint64_t _jsr_prev = nes_jsr_context_enter();\n");
                         uint16_t alias_owner = 0;
                         int alias_bank = -1;
                         int alias_entry = 0;
@@ -1697,6 +1715,7 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                             else
                                 fprintf(f, "func_%04X_b%d();\n", abs16, tb);
                         }
+                        fprintf(f, "if (nes_jsr_context_leave(_jsr_prev)) return; }\n");
                     }
                     return 5;
                 }
@@ -1728,7 +1747,7 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                             jsr_opts.caller_bank = bank;
                         }
                     }
-                    emit_call_target(f, rom, abs16, call_src, fixed_bank, jsr_opts);
+                    emit_jsr_call_target(f, rom, abs16, call_src, fixed_bank, jsr_opts);
                 } else if (abs16 >= 0x8000) {
                     /* MMC3 (mapper 4): 8KB banks at $8000-$9FFF and $A000-$BFFF
                      * are switched independently.  An absolute operand SELECTS a
@@ -1783,11 +1802,11 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                             jsr_opts.caller_bank = bank;
                         }
                     }
-                    emit_call_target(f, rom, abs16, bank, fixed_bank, jsr_opts);
+                    emit_jsr_call_target(f, rom, abs16, bank, fixed_bank, jsr_opts);
                 } else {
                     /* JSR to non-ROM address (RAM/PPU): dispatch at runtime */
                     jsr_opts.force_dynamic = true;
-                    emit_call_target(f, rom, abs16, bank, fixed_bank, jsr_opts);
+                    emit_jsr_call_target(f, rom, abs16, bank, fixed_bank, jsr_opts);
                 }
             }
             /* Universal bail propagation: if S changed after the call

@@ -81,6 +81,54 @@ describe("function discovery", () => {
     expect(result.dispatchEntries).toContain("C020");
   });
 
+  it("scopes a unique logical context around JSR but not JMP tails", () => {
+    const rom = new RomBuilder()
+      .org(0xc000)
+      .jsr(0xc010)
+      .rts()
+      .org(0xc010)
+      .jmp(0xc020)
+      .org(0xc020)
+      .rts()
+      .vectors(0xc000, 0xc000, 0xc000)
+      .writeTemp("jsr_logical_context.nes");
+
+    const result = recompile(rom);
+    expect(result.fullC).toMatch(
+      /nes_jsr_context_enter\(\);[\s\S]*func_C010\(\);[\s\S]*if \(nes_jsr_context_leave\(_jsr_prev\)\) return;/
+    );
+    // The only real JSR is C000→C010. C010→C020 is a JMP tail and must
+    // inherit that context so repeated tail laps remain flattenable. Restrict
+    // the count to RESET: pointer discovery may also emit misaligned/data
+    // entry points whose bytes happen to decode as an unrelated JSR.
+    const resetBody = result.fullC.match(/void func_C000\(void\) \{[\s\S]*?\n\}/);
+    expect(resetBody, "func_C000 definition should be present").not.toBeNull();
+    expect(resetBody![0].match(/nes_jsr_context_enter\(\)/g) ?? []).toHaveLength(1);
+  });
+
+  it("propagates PLA PLA JMP past the discarded JSR continuation", () => {
+    const rom = new RomBuilder()
+      .org(0xc000)
+      .jsr(0xc010)
+      .lda(0x77) // must be skipped after the callee discards this JSR return
+      .rts()
+      .org(0xc010)
+      .emit([0x68, 0x68])
+      .jmp(0xc020)
+      .org(0xc020)
+      .rts()
+      .vectors(0xc000, 0xc000, 0xc000)
+      .writeTemp("pla_pla_jmp_unwind.nes");
+
+    const result = recompile(rom);
+    expect(result.fullC).toMatch(
+      /PLA PLA JMP \$C020[^]*nes_jsr_context_unwind_current\(\);[^]*call_by_address_tail\(0xC020, -1\)/
+    );
+    expect(result.fullC).toMatch(
+      /func_C010\(\);[^]*if \(nes_jsr_context_leave\(_jsr_prev\)\) return;/
+    );
+  });
+
   it("discovers JMP tail-call targets", () => {
     const rom = new RomBuilder()
       .org(0xc000)
@@ -250,14 +298,14 @@ describe("code generation", () => {
       .writeTemp("rti_hijack.nes");
 
     const result = recompile(rom);
-    // The NMI handler's emitted body should contain a call to the hijack target.
-    // The actual instructions live in func_C080_body (the outer func_C080 is a
-    // dispatcher shim that just calls _body).
+    // The actual stack rewrite lives in func_C080_body (the outer func_C080 is
+    // a dispatcher shim). RTI records the rewritten PC in g_rti_target; the
+    // common func_NMI wrapper dispatches it after leaving NMI context.
     const nmiMatch = result.fullC.match(/func_C080_body\([^)]*\)\s*\{[\s\S]*?\n\}/);
     expect(nmiMatch, "func_C080_body definition should be present").not.toBeNull();
     const nmiBody = nmiMatch![0];
-    expect(nmiBody).toContain("RTI-hijack");
-    expect(nmiBody).toContain("call_by_address(0xC150)");
+    expect(nmiBody).toContain("g_rti_target = (_rti_hi << 8) | _rti_lo");
+    expect(result.fullC).toContain("call_by_address(g_rti_target)");
   });
 
   it("function finder seeds RTI-hijack target when otherwise unreachable", () => {
@@ -285,8 +333,8 @@ describe("code generation", () => {
     // $C150 must be discovered and dispatched, even though nothing else
     // references it in the ROM.
     expect(result.dispatchEntries).toContain("C150");
-    // And the codegen emission for the NMI handler should still reference it.
-    expect(result.fullC).toContain("call_by_address(0xC150)");
+    // The common NMI wrapper dynamically dispatches the rewritten RTI target.
+    expect(result.fullC).toContain("call_by_address(g_rti_target)");
   });
 
   it("MMC3: cross-bank JSR to $8000 region resolved via R6 switch", () => {

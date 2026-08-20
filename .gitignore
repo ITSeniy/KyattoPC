@@ -1,5 +1,6 @@
 # Build trees
 **/build/
+**/build*/
 **/build_recomp/
 **/build_release/
 **/out/
@@ -11,6 +12,7 @@
 **/*.exe
 **/*.dll
 **/*.pdb
+**/*.dmp
 **/*.ilk
 **/*.exp
 **/*.idb
@@ -80,6 +82,7 @@ desktop.ini
 
 # Node (if tests present)
 **/node_modules/
+.pnpm-store/
 
 # Ephemeral playtest / smoke captures (local)
 **/playtest*.txt

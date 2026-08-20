@@ -1,0 +1,3 @@
+allowBuilds:
+  # Vitest/Vite use esbuild; allow its platform-binary verification step.
+  esbuild: true

@@ -187,8 +187,9 @@ static void atexit_handler(void) {
     extern const char *g_recomp_stack[];
     extern int g_recomp_stack_top;
     extern uint64_t g_frame_count;
-    /* Only log if the game exited unexpectedly (recomp stack still active) */
-    if (g_recomp_stack_top > 0) {
+    /* A completed smoke run exits from inside the emulated call chain, so its
+     * recompiled stack is expected to be non-empty. Only diagnose real exits. */
+    if (g_recomp_stack_top > 0 && !g_runner_expected_exit) {
         extern void nes_dump_dispatch_ring(void);
         printf("[EXIT] Unexpected exit at frame %llu, recomp stack (top=%d):\n",
                (unsigned long long)g_frame_count, g_recomp_stack_top);

@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
+import argparse
 from pathlib import Path
 
-rom = Path(r"C:\Users\ITSeniy\source\KyattoPC\Cat Ninden Teyandee (Japan).nes").read_bytes()
+parser = argparse.ArgumentParser(description="Inspect cutscene pointer tables")
+parser.add_argument(
+    "rom",
+    nargs="?",
+    type=Path,
+    default=Path(__file__).resolve().parents[2] / "Cat Ninden Teyandee (Japan).nes",
+)
+args = parser.parse_args()
+
+rom = args.rom.read_bytes()
 prg = rom[16 : 16 + 128 * 1024]
 b7 = prg[7 * 0x2000 : 8 * 0x2000]
 b8 = prg[8 * 0x2000 : 9 * 0x2000]
@@ -50,9 +60,12 @@ print("If BF8A is FF-filled, intro ends immediately even on real hardware — un
 
 # Search which 8KB banks contain BD1A-like non-FF if we mis-map
 target_lo = 0x1D1A
-print(f"\nByte at offset ${target_lo:04X} in each 8KB PRG bank:")
+print("\nByte at offset $" + f"{target_lo:04X} in each 8KB PRG bank:")
 for i in range(16):
     bank = prg[i * 0x2000 : (i + 1) * 0x2000]
-    b = bank[target_lo]
+    byte = bank[target_lo]
     nn = sum(1 for x in bank[target_lo : target_lo + 16] if x != 0xFF)
-    print(f"  8KB#{i:02d}: first={b:02X} nonFF_in_16={nn} sample={bank[target_lo:target_lo+8].hex()}")
+    print(
+        f"  8KB#{i:02d}: first={byte:02X} nonFF_in_16={nn} "
+        f"sample={bank[target_lo:target_lo+8].hex()}"
+    )

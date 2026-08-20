@@ -140,6 +140,12 @@ uint32_t game_get_expected_crc32(void) { return 0x45878D7Fu; }
 const char *game_get_name(void) { return "Kyatto Ninden Teyandee"; }
 
 void game_on_init(void) {
+    /* The status-bar MMC3 IRQ fires near the end of scanline 174, but FC22
+     * spends enough CPU cycles acknowledging/dispatching the IRQ that its CHR
+     * bank writes cannot affect scanline 175. Keep that row in the playfield
+     * regime; the HUD starts cleanly on scanline 176, matching the NES. */
+    g_render_irq_defer_scanlines = 1;
+
     if (s_tile_compile) {
         int n = chr_override_compile_dir(s_tile_compile_dir);
         printf("[ChrOverride] Compiled %d PNGs in %s\n", n, s_tile_compile_dir);
@@ -291,7 +297,33 @@ void game_run_main(void) {
     func_RESET();
 }
 
-int game_dispatch_override(uint16_t addr) { (void)addr; return 0; }
+int game_dispatch_override(uint16_t addr) {
+    /* The bank-2 object walker ($DE74) tail-dispatches through a per-type,
+     * per-state table.  On the ladder return/re-entry sequence its $50/$51
+     * cursor can escape the $0420-$0580 object pool (observed at $0640).
+     * It then treats transition/PPU-buffer bytes as an object and reads $04A9
+     * as a function target.  Returning from that bogus target leaves the
+     * walker alive with progressively worse pointers, eventually feeding
+     * object bytes to the PPU upload queue and corrupting the room.
+     *
+     * Teyandee has no executable RAM targets.  Suppress only a RAM dispatch
+     * made while $50/$51 is an aligned cursor beyond the real object pool.
+     * The next frame restarts the walk at $0420.  Valid object slots and PRG
+     * targets still fall through to the regular dispatcher/miss diagnostics.
+     * g_current_bank cannot be used here: a fixed-bank helper may already have
+     * restored it before the bank-aware dispatcher reports this bank-2 miss. */
+    if (addr < 0x8000) {
+        uint16_t object = (uint16_t)g_ram[0x50] |
+                          ((uint16_t)g_ram[0x51] << 8);
+        if (object >= 0x05A0 && object <= 0x07E0 &&
+            (object & 0x001F) == 0) {
+            fprintf(stderr, "[Teyandee] Stopped malformed object walk at "
+                            "$%04X (target=$%04X)\n", object, addr);
+            return 1;
+        }
+    }
+    return 0;
+}
 
 uint8_t game_ram_read_hook(uint16_t pc, uint16_t addr, uint8_t val) {
     (void)pc; (void)addr;

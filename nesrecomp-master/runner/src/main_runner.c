@@ -925,6 +925,7 @@ smoke_skip_input:
         g_frame_count++;
         if ((int)g_frame_count >= s_smoke_frames) {
             smoke_write_results();
+            g_runner_expected_exit = 1;
             exit(0);
         }
         return; /* skip all SDL rendering/pacing */

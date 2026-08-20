@@ -1,10 +1,10 @@
-build/
-build_recomp/
+build*/
 *.nes
 *.bin
 *.sav
 *.log
 *.zip
+*.dmp
 .mcp.json
 
 # nesrecomp is linked/cloned by setup.bat / setup.sh
