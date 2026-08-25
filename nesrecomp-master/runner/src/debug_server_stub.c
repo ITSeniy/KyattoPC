@@ -29,6 +29,7 @@ void debug_server_request_pause(const char *reason) { (void)reason; }
 void debug_server_wait_if_paused(void) {}
 void debug_server_shutdown(void) {}
 int debug_server_is_connected(void) { return 0; }
+int debug_server_submit_capture_marker(const char *label) { (void)label; return 0; }
 int debug_server_get_input_override(void) { return -1; }
 void debug_server_set_verify_result(int passed, int diff_count,
                                     const FrameDiffEntry *diffs, int n_diffs) {

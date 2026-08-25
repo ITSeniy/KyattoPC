@@ -1,23 +1,22 @@
-# Location-transition corruption: post-mortem and regression debugger
+# Object-walker corruption: post-mortem and regression debugger
 
-The original bug is fixed. This harness remains as a regression test: it catches
-the first malformed pass of the bank-2 object walker instead of waiting for bad
-object bytes to reach the PPU upload queue.
+The primary TAS corruption chain is fixed. This harness remains as a regression
+and investigation tool: it catches the first malformed pass of the bank-2
+object walker instead of waiting for bad object bytes to alter collision or PPU
+state.
 
 ## Root cause
 
-Teyandee uses a 6502 `PLA; PLA; JMP` sequence to discard a nested JSR return and
-continue at a different target. Directly generated C calls did not represent
-that logical return address, so the C caller resumed after the nested function
-had deliberately thrown its 6502 return away. The stale bank-2 object walker
-then advanced beyond its pool and eventually exposed non-object data to the PPU
-upload path.
+The primary defect was a fixed-bank ROM loop split across generated C tail
+dispatches. `$DE8A` jumps forward to `$E1AB`; after calling `$E587` and testing
+the end cursor, `$E1D5` jumps back to `$DE81`. Nested object-handler tails could
+leave a stale deferred lap, which resumed after the `$05A0` exit test and walked
+past the object pool.
 
-NESRecomp now scopes generated JSR calls with logical context tokens. The
-runtime marks the active token when a translated `PLA; PLA; JMP` discards it,
-and generated callers propagate the unwind instead of continuing after the
-obsolete JSR. The game retains a narrow invalid-object-dispatch guard as a
-last-resort diagnostic safety net.
+The game config now merges the non-contiguous `$DE74/$E1AB` entries. NESRecomp
+emits the forward jump to the merge partner as an in-body `goto` and retains a
+public wrapper for direct `$E1AB` dispatch. The game also retains a narrow
+invalid-object-dispatch guard as a diagnostic safety net.
 
 The ROM path is:
 
@@ -30,8 +29,20 @@ The ROM path is:
    progressively higher) proves that control flow escaped the object pool.
 
 The `game_dispatch_override()` safety net may prevent final room damage, but
-this monitor stops earlier: at the first impossible cursor step. A healthy run
-does not trigger either mechanism.
+this monitor stops earlier: at the first impossible cursor step. The repaired
+frame-1377 chain no longer triggers either mechanism.
+
+A later, independent TAS sequence used to reach `$0640` with `$5091`, `$3620`,
+and `$04A9`. It exposed a second runtime defect: one global logical-JSR unwind
+token was overwritten when nested `PLA; PLA; JMP` paths marked more than one
+context before their callers returned. The runtime now retains a bounded set of
+exact unwind tokens, and a fresh 2,000-frame run no longer triggers the guard.
+
+The subsequent frame-1980 camera mismatch was not another tail failure. It was
+caused by the batched renderer delivering MMC3 IRQ `$FC22` about 14,256 CPU
+cycles late. Teyandee now uses the cycle-driven per-scanline PPU by default;
+the corresponding IRQ is within 203 cycles of FCEUX and the camera state
+recovers to exact agreement.
 
 ## Build
 
@@ -53,9 +64,9 @@ Launch the executable printed by the helper. In a second terminal:
   -Output .\build_transition_debug\transition-report.json
 ```
 
-Then reproduce: leave the location, enter the adjacent one, and return. The
-monitor should continue running without parking the game or creating a failure
-report.
+Then reproduce the desired route. For the original transition regression, leave
+the location, enter the adjacent one, and return; neither the frame-1377 chain
+nor the later `$5091/$3620/$04A9` sequence may recur.
 
 ## Evidence captured
 

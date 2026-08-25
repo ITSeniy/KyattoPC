@@ -14,6 +14,7 @@ nestopia-core
 # Tile/CHR override runtime artifacts
 tiles/
 chr_dump/
+captures/
 *.chr.bin
 
 # Bank extracts for Ghidra (rebuild via tools/extract_banks.py)

@@ -59,12 +59,60 @@ static const char *s_loadstate_path = NULL;
 
 /* ---- Smoke test mode (--smoke N) ---- */
 static int         s_smoke_frames   = 0;     /* 0 = normal, >0 = headless smoke test */
+/* Script state sampled for the current physical video frame. The physical
+ * boundary advances the script before caching it, matching movie-frame input
+ * instead of delaying every transition until the following frame. */
+static int         s_script_frame_buttons = -1;
 static int         s_smoke_interval = 100;   /* hash framebuffer every N frames */
 static const char *s_smoke_output   = NULL;  /* output file path (NULL = stdout) */
+static const char *s_smoke_ram_trace_path = NULL;
+static FILE       *s_smoke_ram_trace_file = NULL;
 #define SMOKE_MAX_HASHES 10000
 static uint32_t    s_smoke_hashes[SMOKE_MAX_HASHES];
 static int         s_smoke_hash_frames[SMOKE_MAX_HASHES];
 static int         s_smoke_hash_count = 0;
+
+/* Binary per-frame WRAM trace shared with tools/compare_tas_traces.py.
+ * Header: magic[4], version u32le, RAM size u32le, record size u32le.
+ * Record: frame u32le followed by the complete 2 KiB internal RAM image. */
+static void smoke_trace_write_u32(uint32_t value) {
+    uint8_t bytes[4] = {
+        (uint8_t)(value & 0xFF),
+        (uint8_t)((value >> 8) & 0xFF),
+        (uint8_t)((value >> 16) & 0xFF),
+        (uint8_t)((value >> 24) & 0xFF)
+    };
+    fwrite(bytes, 1, sizeof(bytes), s_smoke_ram_trace_file);
+}
+
+static void smoke_trace_close(void) {
+    if (s_smoke_ram_trace_file) {
+        fclose(s_smoke_ram_trace_file);
+        s_smoke_ram_trace_file = NULL;
+    }
+}
+
+static int smoke_trace_open(void) {
+    if (!s_smoke_ram_trace_path) return 1;
+    s_smoke_ram_trace_file = fopen(s_smoke_ram_trace_path, "wb");
+    if (!s_smoke_ram_trace_file) {
+        fprintf(stderr, "[Smoke] Cannot open RAM trace: %s\n",
+                s_smoke_ram_trace_path);
+        return 0;
+    }
+    fwrite("NRT1", 1, 4, s_smoke_ram_trace_file);
+    smoke_trace_write_u32(1);
+    smoke_trace_write_u32((uint32_t)sizeof(g_ram));
+    smoke_trace_write_u32((uint32_t)(4 + sizeof(g_ram)));
+    atexit(smoke_trace_close);
+    return 1;
+}
+
+static void smoke_trace_record_frame(void) {
+    if (!s_smoke_ram_trace_file) return;
+    smoke_trace_write_u32((uint32_t)g_frame_count);
+    fwrite(g_ram, 1, sizeof(g_ram), s_smoke_ram_trace_file);
+}
 
 /* ---- SDL state (file-level so nes_vblank_callback can access) ---- */
 static SDL_Window        *s_window    = NULL;
@@ -254,21 +302,149 @@ static const uint8_t s_font8[96][8] = {
 };
 
 /* Draw one character directly via SDL_RenderFillRect. font8x8_basic: bit0 = leftmost pixel. */
-static void watch_draw_char(int x, int y, char c, int sc, uint8_t r, uint8_t g, uint8_t b) {
+static void runner_draw_char(SDL_Renderer *renderer, int x, int y, char c, int sc,
+                             uint8_t r, uint8_t g, uint8_t b) {
     if (c < 0x20 || c > 0x7F) c = '?';
     const uint8_t *glyph = s_font8[(uint8_t)c - 0x20];
-    SDL_SetRenderDrawColor(s_watch_renderer, r, g, b, 255);
+    SDL_SetRenderDrawColor(renderer, r, g, b, 255);
     for (int gy = 0; gy < 8; gy++)
         for (int gx = 0; gx < 8; gx++)
             if (glyph[gy] & (1 << gx)) {
                 SDL_Rect px = { x + gx*sc, y + gy*sc, sc, sc };
-                SDL_RenderFillRect(s_watch_renderer, &px);
+                SDL_RenderFillRect(renderer, &px);
             }
 }
 
-static void watch_draw_str(int x, int y, const char *str, int sc, uint8_t r, uint8_t g, uint8_t b) {
+static void runner_draw_str(SDL_Renderer *renderer, int x, int y, const char *str, int sc,
+                            uint8_t r, uint8_t g, uint8_t b) {
     for (; *str; str++, x += 8 * sc)
-        watch_draw_char(x, y, *str, sc, r, g, b);
+        runner_draw_char(renderer, x, y, *str, sc, r, g, b);
+}
+
+static void watch_draw_str(int x, int y, const char *str, int sc,
+                           uint8_t r, uint8_t g, uint8_t b) {
+    runner_draw_str(s_watch_renderer, x, y, str, sc, r, g, b);
+}
+
+/* Present the last completed game frame with a modal RAM-capture prompt. The
+ * overlay is renderer-only: screenshots still receive the clean NES/HD frame. */
+static void capture_marker_present(const char *label, const char *status) {
+    if (!s_renderer) return;
+
+    int out_w = 0, out_h = 0;
+    SDL_GetRendererOutputSize(s_renderer, &out_w, &out_h);
+    SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
+    SDL_RenderClear(s_renderer);
+    if (s_hd_texture && hdpack_active())
+        SDL_RenderCopy(s_renderer, s_hd_texture, NULL, NULL);
+    else if (s_texture)
+        SDL_RenderCopy(s_renderer, s_texture, NULL, NULL);
+
+    SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 170);
+    SDL_Rect shade = { 0, 0, out_w, out_h };
+    SDL_RenderFillRect(s_renderer, &shade);
+
+    int box_w = out_w - out_w / 10;
+    if (box_w > 820) box_w = 820;
+    int box_h = 190;
+    int box_x = (out_w - box_w) / 2;
+    int box_y = (out_h - box_h) / 2;
+    SDL_SetRenderDrawColor(s_renderer, 10, 14, 24, 245);
+    SDL_Rect box = { box_x, box_y, box_w, box_h };
+    SDL_RenderFillRect(s_renderer, &box);
+    SDL_SetRenderDrawColor(s_renderer, 64, 196, 255, 255);
+    SDL_Rect top = { box_x, box_y, box_w, 4 };
+    SDL_RenderFillRect(s_renderer, &top);
+
+    int title_sc = out_w >= 560 ? 2 : 1;
+    int label_sc = out_w >= 900 ? 2 : 1;
+    runner_draw_str(s_renderer, box_x + 24, box_y + 20,
+                    "RAM CAPTURE MARKER", title_sc, 90, 220, 255);
+    runner_draw_str(s_renderer, box_x + 24, box_y + 58,
+                    status ? status : "TYPE A STATE LABEL, THEN ENTER",
+                    1, status ? 120 : 170, status ? 255 : 180, status ? 150 : 200);
+
+    if (label) {
+        char line[56];
+        int max_chars = box_w / (8 * label_sc) - 5;
+        if (max_chars < 8) max_chars = 8;
+        const char *shown = label;
+        int len = (int)strlen(label);
+        if (len > max_chars) shown = label + len - max_chars;
+        snprintf(line, sizeof(line), "> %s_", shown);
+        runner_draw_str(s_renderer, box_x + 24, box_y + 92,
+                        line, label_sc, 255, 255, 255);
+    }
+    runner_draw_str(s_renderer, box_x + 24, box_y + 152,
+                    "BACKSPACE EDITS  ESC CANCELS  TYPE DONE TO FINISH",
+                    1, 125, 140, 165);
+    SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_NONE);
+    SDL_RenderPresent(s_renderer);
+}
+
+/* Freeze at the current displayed frame, collect a compact ASCII marker, and
+ * hand it to the TCP capture client. The server pause remains active until the
+ * client has saved the marker and sends `continue`. */
+static void capture_marker_prompt(void) {
+    char label[49] = "";
+    int len = 0;
+    int done = 0;
+    int accepted = 0;
+
+    SDL_StartTextInput();
+    while (!done) {
+        capture_marker_present(label, NULL);
+        SDL_Event ev;
+        while (SDL_PollEvent(&ev)) {
+            controller_handle_event(&ev);
+            if (ev.type == SDL_QUIT ||
+                (ev.type == SDL_WINDOWEVENT &&
+                 ev.window.event == SDL_WINDOWEVENT_CLOSE))
+                exit(0);
+            if (ev.type == SDL_KEYDOWN) {
+                SDL_Keycode key = ev.key.keysym.sym;
+                if (key == SDLK_ESCAPE) {
+                    done = 1;
+                } else if (key == SDLK_BACKSPACE && len > 0) {
+                    label[--len] = '\0';
+                } else if ((key == SDLK_RETURN || key == SDLK_KP_ENTER) && len > 0) {
+                    accepted = 1;
+                    done = 1;
+                }
+            } else if (ev.type == SDL_TEXTINPUT) {
+                for (const unsigned char *p = (const unsigned char *)ev.text.text;
+                     *p && len < (int)sizeof(label) - 1; p++) {
+                    char c = (char)*p;
+                    if (c >= 'a' && c <= 'z') c = (char)(c - 'a' + 'A');
+                    if (c == ' ') c = '_';
+                    if ((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+                        c == '_' || c == '-')
+                        label[len++] = c;
+                }
+                label[len] = '\0';
+            }
+        }
+        SDL_Delay(16);
+    }
+    SDL_StopTextInput();
+
+    if (accepted) {
+        capture_marker_present(label, "SAVING MARKER - GAME IS PAUSED");
+        if (!debug_server_submit_capture_marker(label)) {
+            capture_marker_present(label, "CAPTURE CLIENT IS NOT CONNECTED");
+            SDL_Delay(900);
+        }
+    } else {
+        /* Clear the prompt immediately instead of waiting for the next frame. */
+        SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
+        SDL_RenderClear(s_renderer);
+        if (s_hd_texture && hdpack_active())
+            SDL_RenderCopy(s_renderer, s_hd_texture, NULL, NULL);
+        else if (s_texture)
+            SDL_RenderCopy(s_renderer, s_texture, NULL, NULL);
+        SDL_RenderPresent(s_renderer);
+    }
 }
 
 static void watch_render_frame(void) {
@@ -535,9 +711,34 @@ static void smoke_write_results(void) {
                 s_smoke_hash_frames[i], s_smoke_hashes[i],
                 (i < s_smoke_hash_count - 1) ? "," : "");
     }
+    fprintf(f, "  },\n");
+    fprintf(f, "  \"final_ram\": {\n");
+    fprintf(f, "    \"byte_0046\": \"0x%02X\",\n", g_ram[0x0046]);
+    fprintf(f, "    \"round_005D\": \"0x%02X\",\n", g_ram[0x005D]);
+    fprintf(f, "    \"character_003B\": \"0x%02X\",\n", g_ram[0x003B]);
+    fprintf(f, "    \"health_003F\": \"0x%02X\",\n", g_ram[0x003F]);
+    fprintf(f, "    \"lives_0043_0044\": \"%02X%02X\",\n", g_ram[0x0043], g_ram[0x0044]);
+    fprintf(f, "    \"score_0045_0048\": \"%02X%02X%02X%02X\",\n",
+            g_ram[0x0045], g_ram[0x0046], g_ram[0x0047], g_ram[0x0048]);
+    fprintf(f, "    \"player_x_0402\": \"0x%02X\",\n", g_ram[0x0402]);
+    fprintf(f, "    \"player_y_0404\": \"0x%02X\",\n", g_ram[0x0404]);
+    fprintf(f, "    \"camera_page_0031\": \"0x%02X\",\n", g_ram[0x0031]);
+    fprintf(f, "    \"camera_x_0054\": \"0x%02X\",\n", g_ram[0x0054]);
+    fprintf(f, "    \"hard_mode_06F6\": \"0x%02X\"\n", g_ram[0x06F6]);
     fprintf(f, "  }\n");
     fprintf(f, "}\n");
     if (s_smoke_output && f != stdout) fclose(f);
+}
+
+/* ---- Physical video-frame input boundary ------------------------------- */
+void nes_video_frame_boundary(uint64_t video_frame) {
+    /* Advance first, then expose this frame's state. The old sample-then-tick
+     * order delayed FM2 transitions by exactly one NTSC frame; RAM alignment
+     * could hide that until a jump crossed a collision-tile boundary. */
+    script_tick(video_frame, g_ram);
+    s_script_frame_buttons = script_get_buttons();
+    if (s_script_frame_buttons >= 0)
+        g_controller1_buttons = (uint8_t)s_script_frame_buttons;
 }
 
 /* ---- VBlank callback (called from ppu_read_reg when $2002 bit7 fires) ---- */
@@ -575,6 +776,16 @@ void nes_vblank_callback(void) {
             savestate_load("C:/temp/quicksave.sav");
             record_sync_frame(g_frame_count); /* g_frame_count now = restored value */
         }
+        if (ev.type == SDL_KEYDOWN && !ev.key.repeat &&
+            ev.key.keysym.sym == SDLK_F9) {
+            if (debug_server_is_connected())
+                capture_marker_prompt();
+            else
+                SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION,
+                    "RAM capture marker",
+                    "The capture client is not connected. Start tools/run_ram_capture.ps1 first.",
+                    s_window);
+        }
         /* Toggle borderless-desktop fullscreen: F11 or Alt+Enter. */
         if (ev.type == SDL_KEYDOWN && s_window &&
             (ev.key.keysym.sym == SDLK_F11 ||
@@ -608,7 +819,7 @@ void nes_vblank_callback(void) {
         record_tick(g_frame_count, btn, g_turbo);
 
         /* Script override: if a script is loaded, use its button state */
-        int sp = script_get_buttons();
+        int sp = s_script_frame_buttons;
         if (sp >= 0) btn = (uint8_t)sp;
 
         /* TCP debug server override: set_input command */
@@ -621,10 +832,6 @@ void nes_vblank_callback(void) {
     }
 
 smoke_skip_input:
-
-    /* Per-frame script execution */
-    if (!s_smoke_frames)
-    script_tick(g_frame_count, g_ram);
 
     /* TCP debug server: poll for commands each frame. Polled in smoke mode
      * too — headless runs are the main consumer of automated TCP probes,
@@ -914,6 +1121,7 @@ smoke_skip_input:
 
     /* Smoke test: hash framebuffer at intervals and check exit */
     if (s_smoke_frames) {
+        smoke_trace_record_frame();
         if (g_frame_count % s_smoke_interval == 0 &&
             s_smoke_hash_count < SMOKE_MAX_HASHES) {
             s_smoke_hashes[s_smoke_hash_count] =
@@ -1181,6 +1389,7 @@ void nesrecomp_runner_run(int argc, char *argv[]) {
         else if (strcmp(argv[i], "--smoke")     == 0 && i+1 < argc) s_smoke_frames   = atoi(argv[++i]);
         else if (strcmp(argv[i], "--smoke-interval") == 0 && i+1 < argc) s_smoke_interval = atoi(argv[++i]);
         else if (strcmp(argv[i], "--smoke-output")   == 0 && i+1 < argc) s_smoke_output   = argv[++i];
+        else if (strcmp(argv[i], "--smoke-ram-trace") == 0 && i+1 < argc) s_smoke_ram_trace_path = argv[++i];
         else {
             /* Offer remaining args to the game-specific handler */
             const char *val = (i+1 < argc && argv[i+1][0] != '-') ? argv[i+1] : NULL;
@@ -1225,6 +1434,9 @@ void nesrecomp_runner_run(int argc, char *argv[]) {
     if (s_smoke_frames) {
         printf("[Smoke] Headless mode: running %d frames, hashing every %d\n",
                s_smoke_frames, s_smoke_interval);
+        if (!smoke_trace_open()) exit(1);
+        if (s_smoke_ram_trace_path)
+            printf("[Smoke] Per-frame RAM trace: %s\n", s_smoke_ram_trace_path);
         memset(s_framebuf, 0, sizeof(s_framebuf));
         game_run_main();
         /* Unreachable — game_run_main never returns, smoke exits from vblank */

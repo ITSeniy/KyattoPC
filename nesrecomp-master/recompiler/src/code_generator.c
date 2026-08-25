@@ -377,6 +377,21 @@ static int collect_secondary_addrs(const NESRom *rom, const FunctionList *funcs,
         }
         if (!found) {
             bool valid = false;
+            /* scan_function_boundaries() follows only the canonical function's
+             * contiguous control-flow region.  An explicit merge_func partner
+             * can intentionally be non-contiguous, so it is absent from that
+             * scan even though emit_function() seeds it into valid_starts and
+             * emits a real secondary wrapper.  Treat the configured partner as
+             * a public entry here as well, otherwise the wrapper exists in the
+             * generated body but is omitted from the dispatch table. */
+            for (int ci = 0; ci < cfg->merge_func_count; ci++) {
+                if (cfg->merge_funcs[ci].bank == bank &&
+                    cfg->merge_funcs[ci].addr_lo == pc &&
+                    cfg->merge_funcs[ci].addr_hi == mp) {
+                    valid = true;
+                    break;
+                }
+            }
             for (int v = 0; v < valid_count; v++) {
                 if (valid_starts[v] == mp) { valid = true; break; }
             }
@@ -1880,6 +1895,24 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                          * scheduler's setjmp point. */
                         fprintf(f, "coroutine_yield(); return;\n");
                     } else {
+                        /* A configured merge_func may join non-contiguous
+                         * fixed-bank entries into this body.  A forward JMP to
+                         * its merge partner is still an in-body branch even
+                         * though the label has not been emitted yet.  Treat it
+                         * exactly like the backward-label case above; routing
+                         * it through call_by_address_tail leaves an unnecessary
+                         * C return frame in real JMP loops. */
+                        bool is_merge_partner = false;
+                        for (int mi = 0; mi < merge_partner_count; mi++) {
+                            if (abs16 == merge_partners[mi]) {
+                                is_merge_partner = true;
+                                break;
+                            }
+                        }
+                        if (is_merge_partner) {
+                            fprintf(f, "maybe_trigger_vblank(2);\n    goto label_%04X;\n", abs16);
+                            break;
+                        }
                         /* Check push_jmp: bail-containing targets need a dummy
                          * push so the bail's RTS has something safe to pop.
                          * source=0 matches any JMP site; nonzero matches only that PC. */
@@ -2031,7 +2064,7 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                             fprintf(f, "{ uint16_t _jt = nes_read16zp(0x%02X); maybe_trigger_vblank(2); g_cpu.S = (uint8_t)(g_cpu.S + 2); call_by_address(_jt); } goto label_%04X;\n",
                                     (uint8_t)abs16, cont);
                         } else {
-                            fprintf(f, "{ uint16_t _jt = nes_read16zp(0x%02X); maybe_trigger_vblank(2); call_by_address(_jt); return; }\n", (uint8_t)abs16);
+                            fprintf(f, "{ uint16_t _jt = nes_read16zp(0x%02X); maybe_trigger_vblank(2); call_by_address_tail(_jt, -1); return; }\n", (uint8_t)abs16);
                         }
                     }
                 } else {
@@ -2067,7 +2100,7 @@ static int emit_instruction(FILE *f, const NESRom *rom, int bank,
                         fprintf(f, "{ uint16_t _jt = nes_read16_jmpbug(0x%04X); maybe_trigger_vblank(2); g_cpu.S = (uint8_t)(g_cpu.S + 2); call_by_address(_jt); } goto label_%04X;\n",
                                 abs16, cont);
                     } else {
-                        fprintf(f, "{ uint16_t _jt = nes_read16_jmpbug(0x%04X); maybe_trigger_vblank(2); call_by_address(_jt); return; }\n", abs16);
+                        fprintf(f, "{ uint16_t _jt = nes_read16_jmpbug(0x%04X); maybe_trigger_vblank(2); call_by_address_tail(_jt, -1); return; }\n", abs16);
                     }
                 }
             }

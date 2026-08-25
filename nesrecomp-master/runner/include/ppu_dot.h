@@ -1,9 +1,9 @@
 /*
  * ppu_dot.h — cycle-driven, per-scanline PPU renderer (Phase 3, EXPERIMENTAL).
  *
- * Opt-in via the NESRECOMP_DOT_PPU environment variable. When OFF (the
- * default) every entry point is a no-op and the per-frame renderer in
- * ppu_renderer.c is used unchanged — the build is byte-identical.
+ * Games may opt in from game_on_init(); NESRECOMP_DOT_PPU=0/1 overrides that
+ * default. When OFF every entry point is a no-op and the per-frame renderer in
+ * ppu_renderer.c is used unchanged.
  *
  * Model (see ACCURACY_PHASE_PLAN.md §Phase 3):
  *   - The dot clock is SLAVED to the existing frame driver (s_ops_count /
@@ -28,10 +28,13 @@
 
 #include <stdint.h>
 
-/* 1 if the dot-accurate PPU is engaged this run (env NESRECOMP_DOT_PPU set and
- * not in a fall-back mode such as widescreen). Read at every CPU instruction
+/* 1 if the dot-accurate PPU is engaged this run. Read at every CPU instruction
  * boundary, so it is a plain cached global. */
 extern int g_dot_ppu_on;
+
+/* Per-game default selected from game_on_init(), which runs before
+ * ppu_dot_init(). NESRECOMP_DOT_PPU=0/1 always overrides it. */
+extern int g_dot_ppu_default;
 
 /* Read the env flag and register the framebuffer. Call once at startup. */
 void ppu_dot_init(uint32_t *framebuf);

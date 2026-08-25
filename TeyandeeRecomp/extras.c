@@ -12,6 +12,7 @@
  */
 #include "game_extras.h"
 #include "nes_runtime.h"
+#include "ppu_dot.h"
 #include "debug_server.h"
 #include "override_text.h"
 #include "override_chr.h"
@@ -35,6 +36,7 @@ const char *g_rom_path_for_extras = NULL;
 
 /* ---- Debug ---- */
 static int s_debug_enabled = 0;
+static int s_debug_requested = 0;
 static int s_tcp_port = 4370;
 
 static void get_exe_relative_path(const char *filename, char *out, int max_len) {
@@ -140,6 +142,13 @@ uint32_t game_get_expected_crc32(void) { return 0x45878D7Fu; }
 const char *game_get_name(void) { return "Kyatto Ninden Teyandee"; }
 
 void game_on_init(void) {
+    /* Teyandee changes gameplay state from MMC3 scanline IRQs. The batched
+     * per-frame renderer can deliver FC22 roughly half a frame late, which is
+     * enough to create an extra camera update during scene transitions. The
+     * cycle-driven renderer keeps that IRQ within ~200 CPU cycles of FCEUX.
+     * NESRECOMP_DOT_PPU=0 remains an explicit diagnostic fallback. */
+    g_dot_ppu_default = 1;
+
     /* The status-bar MMC3 IRQ fires near the end of scanline 174, but FC22
      * spends enough CPU cycles acknowledging/dispatching the IRQ that its CHR
      * bank writes cannot affect scanline 175. Keep that row in the playfield
@@ -187,9 +196,10 @@ void game_on_init(void) {
             chr_override_load_manifest(s_chr_overrides_dir);
     }
 
-    s_debug_enabled = check_debug_ini();
+    s_debug_enabled = s_debug_requested || check_debug_ini();
     if (s_debug_enabled) {
-        printf("[Debug] debug.ini found — TCP server enabled\n");
+        printf("[Debug] TCP server enabled%s\n",
+               s_debug_requested ? " by --debug-server" : " by debug.ini");
         debug_server_init(s_tcp_port);
     }
 }
@@ -274,6 +284,11 @@ int game_handle_arg(const char *key, const char *val) {
         printf("[Debug] TCP port set to %d\n", s_tcp_port);
         return 1;
     }
+    if (strcmp(key, "--debug-server") == 0) {
+        s_debug_requested = 1;
+        printf("[Debug] TCP server requested from command line\n");
+        return 1;
+    }
     return 0;
 }
 
@@ -284,6 +299,7 @@ const char *game_arg_usage(void) {
         "  --tile-dump              Dump unique CHR transfers as PNGs to tiles/\n"
         "  --tiles DIR              Path to tile override directory (default: ./tiles)\n"
         "  --tile-compile DIR       Batch convert PNGs in DIR to .chr.bin cache files\n"
+        "  --debug-server          Enable the localhost TCP debug server\n"
         "  --tcp-port PORT          TCP debug server port (default 4370)\n";
 }
 
@@ -297,19 +313,60 @@ void game_run_main(void) {
     func_RESET();
 }
 
+static void maybe_dump_bad_walk_dispatch_state(void) {
+    static int enabled = -1;
+    static int dumped = 0;
+    if (enabled < 0) {
+        const char *value = getenv("TEYANDEE_DUMP_BAD_WALK");
+        enabled = value && *value && strcmp(value, "0") != 0;
+    }
+    if (!enabled || dumped) return;
+    dumped = 1;
+
+    NesTailActive active[64];
+    int32_t pending = -1;
+    int pending_slot = -1;
+    int caller_bank = -1;
+    int active_count = nes_tail_debug_state(
+        &pending, &pending_slot, &caller_bank, active, 64);
+    fprintf(stderr,
+            "[Teyandee] bad-walk tail state: pending=%d slot=%d "
+            "caller_bank=%d active=%d\n",
+            (int)pending, pending_slot, caller_bank, active_count);
+    for (int i = 0; i < active_count; i++) {
+        fprintf(stderr,
+                "  A slot=%d addr=$%04X S=$%02X ctx=%llu\n",
+                i, active[i].addr, active[i].s,
+                (unsigned long long)active[i].jsr_context);
+    }
+
+    NesDispatchEvt events[128];
+    int event_count = nes_dring_last(128, events);
+    fprintf(stderr, "[Teyandee] last %d dispatch events:\n", event_count);
+    for (int i = 0; i < event_count; i++) {
+        fprintf(stderr,
+                "  %c addr=$%04X cb=%d wb=$%04X obj=$%04X ptr=$%04X "
+                "S=$%02X depth=%u ctx=%llu\n",
+                events[i].kind, events[i].addr, events[i].caller_bank,
+                events[i].window_base, events[i].object_cursor,
+                events[i].indirect_ptr, events[i].s, events[i].depth,
+                (unsigned long long)events[i].jsr_context);
+    }
+    fflush(stderr);
+}
+
 int game_dispatch_override(uint16_t addr) {
     /* The bank-2 object walker ($DE74) tail-dispatches through a per-type,
-     * per-state table.  On the ladder return/re-entry sequence its $50/$51
-     * cursor can escape the $0420-$0580 object pool (observed at $0640).
-     * It then treats transition/PPU-buffer bytes as an object and reads $04A9
-     * as a function target.  Returning from that bogus target leaves the
-     * walker alive with progressively worse pointers, eventually feeding
-     * object bytes to the PPU upload queue and corrupting the room.
+     * per-state table.  Its valid slot cursor is $0440-$05A0; a dispatch while
+     * $50/$51 points beyond that range proves that a generated tail lap escaped
+     * the ROM loop's terminator.  Multiple bad targets have been observed, so
+     * keep this diagnostic based on the cursor invariant rather than any one
+     * room, object type, or target value.
      *
      * Teyandee has no executable RAM targets.  Suppress only a RAM dispatch
      * made while $50/$51 is an aligned cursor beyond the real object pool.
-     * The next frame restarts the walk at $0420.  Valid object slots and PRG
-     * targets still fall through to the regular dispatcher/miss diagnostics.
+     * Valid object slots and PRG targets still fall through to the regular
+     * dispatcher/miss diagnostics.
      * g_current_bank cannot be used here: a fixed-bank helper may already have
      * restored it before the bank-aware dispatcher reports this bank-2 miss. */
     if (addr < 0x8000) {
@@ -317,8 +374,11 @@ int game_dispatch_override(uint16_t addr) {
                           ((uint16_t)g_ram[0x51] << 8);
         if (object >= 0x05A0 && object <= 0x07E0 &&
             (object & 0x001F) == 0) {
+            extern uint64_t g_cosim_vframe;
             fprintf(stderr, "[Teyandee] Stopped malformed object walk at "
-                            "$%04X (target=$%04X)\n", object, addr);
+                            "$%04X (target=$%04X, video_frame=%llu)\n",
+                    object, addr, (unsigned long long)g_cosim_vframe);
+            maybe_dump_bad_walk_dispatch_state();
             return 1;
         }
     }

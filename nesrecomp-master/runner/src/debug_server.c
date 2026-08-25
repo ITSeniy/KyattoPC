@@ -814,7 +814,8 @@ static void handle_dispatch_ring(int id, const char *json)
         id, (int)pending, pending_slot, caller_bank);
     for (int i = 0; i < active_n; i++) {
         pos += snprintf(buf + pos, bufsz - (size_t)pos,
-            "%s{\"slot\":%d,\"addr\":\"0x%04X\",\"s\":\"0x%02X\","
+            "%s{\"slot\":%d,\"addr\":\"0x%04X\","
+            "\"s\":\"0x%02X\","
             "\"ctx\":%llu}",
             i ? "," : "", i, active[i].addr, active[i].s,
             (unsigned long long)active[i].jsr_context);
@@ -981,7 +982,11 @@ static void handle_read_frame_ram(int id, const char *json)
     uint32_t addr = hex_to_u32(addr_str);
     int len = json_get_int(json, "len", 1);
     if (len < 1) len = 1;
-    if (len > 256) len = 256;
+    /* A complete 2 KB WRAM snapshot fits comfortably in send_fmt's 16 KB
+     * response buffer. Keeping this as one request is important for offline
+     * capture tools: eight 256-byte round trips per historical frame make a
+     * marked play session unnecessarily slow to export. */
+    if (len > 0x0800) len = 0x0800;
 
     if (!s_frame_history) { send_err(id, "ring buffer not allocated"); return; }
 
@@ -995,7 +1000,7 @@ static void handle_read_frame_ram(int id, const char *json)
     const NESFrameRecord *r = &s_frame_history[idx];
 
     /* Build hex string */
-    char hex[513];
+    char hex[0x0800 * 2 + 1];
     for (int i = 0; i < len; i++)
         snprintf(hex + i*2, 3, "%02x", frame_read_byte(r, addr + i));
 
@@ -1618,7 +1623,7 @@ static const CmdEntry s_commands[] = {
     { "write_ram",         "write a byte to RAM (debug poke)",                                            handle_write_ram },
     { "read_ppu",          "read N bytes from PPU address space (NT/palette/OAM)",                        handle_read_ppu },
     { "mapper_state",      "current bank, mapper type, mirror mode, MMC3 register snapshot",              handle_mapper_state },
-    { "read_frame_ram",    "read RAM/SRAM/CHR/NT/PAL from a specific historical frame in the ring",       handle_read_frame_ram },
+    { "read_frame_ram",    "read up to 2 KB RAM/SRAM/CHR/NT/PAL from a historical frame",                handle_read_frame_ram },
     { "restore_frame",     "rewind: restore RAM+PPU+CPU from a historical frame snapshot",                handle_restore_frame },
     { "set_input",         "set controller buttons for a specific frame",                                 handle_set_input },
     { "press",             "press a button for one frame (transient input)",                              handle_press },
@@ -2037,6 +2042,36 @@ void debug_server_shutdown(void)
 int debug_server_is_connected(void)
 {
     return s_client != SOCK_INVALID;
+}
+
+int debug_server_submit_capture_marker(const char *label)
+{
+    if (s_client == SOCK_INVALID || !label || !label[0]) return 0;
+
+    /* The in-game prompt already limits input to this alphabet. Sanitize here
+     * as well because this is a public runner API and the label is embedded in
+     * a hand-built JSON event. */
+    char safe[49];
+    int out = 0;
+    for (const char *p = label; *p && out < (int)sizeof(safe) - 1; p++) {
+        char c = *p;
+        if (c >= 'a' && c <= 'z') c = (char)(c - 'a' + 'A');
+        if ((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+            c == '_' || c == '-')
+            safe[out++] = c;
+        else if (c == ' ')
+            safe[out++] = '_';
+    }
+    safe[out] = '\0';
+    if (!safe[0]) return 0;
+
+    /* Freeze before publishing the event. The capture client can now fetch the
+     * newest committed frame without the game advancing underneath it. */
+    s_paused = 1;
+    uint64_t frame = s_history_count > 0 ? s_history_count - 1 : g_frame_count;
+    send_fmt("{\"event\":\"capture_marker\",\"label\":\"%s\",\"frame\":%llu}",
+             safe, (unsigned long long)frame);
+    return 1;
 }
 
 int debug_server_get_input_override(void)

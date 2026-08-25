@@ -1,9 +1,8 @@
 /*
  * ppu_dot.c — cycle-driven, per-scanline PPU renderer (Phase 3, EXPERIMENTAL).
  *
- * See ppu_dot.h and ACCURACY_PHASE_PLAN.md §Phase 3 for the model. Engaged only
- * when NESRECOMP_DOT_PPU is set in the environment AND the framebuffer is the
- * vanilla 256px width (widescreen falls back to the per-frame renderer). When
+ * See ppu_dot.h and ACCURACY_PHASE_PLAN.md §Phase 3 for the model. Games may
+ * select it by default and NESRECOMP_DOT_PPU=0/1 can override that choice. When
  * disabled, every entry point returns immediately and the build behaves exactly
  * as before.
  *
@@ -19,10 +18,12 @@
 #include "nes_runtime.h"
 #include "ppu_dot.h"
 #include "mapper.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 int g_dot_ppu_on = 0;
+int g_dot_ppu_default = 0;
 
 /* NES system palette (ARGB8888) and the render-IRQ suppression toggle both live
  * in ppu_renderer.c. The PPU v register (g_ppuaddr) lives in runtime.c. */
@@ -339,16 +340,13 @@ void ppu_dot_render_snapshot(uint32_t *buf) {
 
 void ppu_dot_init(uint32_t *framebuf) {
     s_fb = framebuf;
-    /* The per-frame renderer (ppu_renderer.c) is the DEFAULT — it delivers a
-     * coherent frame synchronously each VBlank, which is visually smooth. The
-     * cycle-driven per-scanline dot-PPU is a HIDDEN OPT-IN (NESRECOMP_DOT_PPU=1)
-     * for the per-scanline-accurate cases (mid-frame MMC3 IRQ splits, etc.); it
-     * is more hardware-faithful but its incremental publish exhibits scroll
-     * jitter on high-refresh displays, so it is not the default. */
+    /* The generic default remains the synchronous per-frame renderer. Games
+     * whose MMC3 IRQ timing affects gameplay may opt into the cycle-driven
+     * path; the environment always wins so regressions can be bisected. */
     const char *e = getenv("NESRECOMP_DOT_PPU");
-    g_dot_ppu_on = (e && *e) ? (*e != '0') : 0;   /* default OFF (per-frame renderer) */
+    g_dot_ppu_on = (e && *e) ? (*e != '0') : (g_dot_ppu_default != 0);
     printf("[ppu_dot] renderer: %s\n",
-           g_dot_ppu_on ? "dot-accurate per-scanline (opt-in)" : "per-frame (default)");
+           g_dot_ppu_on ? "dot-accurate per-scanline" : "per-frame");
 }
 
 void ppu_dot_advance(uint32_t ops) {

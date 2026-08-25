@@ -102,6 +102,17 @@ bank = 2
 start = 0xADE1
 end = 0xADE7
 
+# The fixed-bank object walker jumps from $DE8A to $E1AB, which advances the
+# $0050/$0051 slot cursor and jumps back to $DE81.  Keep both entries in one C
+# body so this real 6502 JMP loop is emitted as goto labels.  Driving it through
+# the generic tail trampoline can leave an older lap pending when object
+# handlers contain nested tail loops; that stale lap resumes after the $05A0
+# terminator and walks into non-object RAM.
+[[merge_func]]
+bank = 7
+addr_lo = 0xDE74
+addr_hi = 0xE1AB
+
 [functions]
 # Fixed-bank helpers
 fixed = [

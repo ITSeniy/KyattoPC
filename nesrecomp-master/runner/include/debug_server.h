@@ -119,6 +119,12 @@ void debug_server_shutdown(void);
 /* Check if a TCP client is connected. */
 int debug_server_is_connected(void);
 
+/* Freeze execution and send an asynchronous named capture-marker event to the
+ * connected tooling client. Returns 1 when the marker was accepted, or 0 when
+ * no client is connected / the label is empty. The client resumes execution
+ * after it has saved the historical frame and screenshot. */
+int debug_server_submit_capture_marker(const char *label);
+
 /* ---- Legacy watch/follower API removed ----
  * Previously this header exposed poll-based watchpoints (`watch`/`unwatch`),
  * write-level followers (`follow`/`unfollow`/`follow_history`), and

@@ -393,9 +393,23 @@ void nes_brk_executed(uint16_t pc) {
     }
 }
 
+static void jsr_context_reset(void);
+
 void runtime_init(void) {
     memset(&g_cpu, 0, sizeof(g_cpu));
     memset(g_ram,     0, sizeof(g_ram));
+    /* FCEUX's deterministic power-on WRAM model is four $00 bytes followed
+     * by four $FF bytes, repeated across internal RAM. Published power-on
+     * TAS movies can depend on otherwise-undefined RAM, so expose an opt-in
+     * compatibility mode without changing the runner's legacy zeroed default. */
+    {
+        const char *power_ram = getenv("NESRECOMP_POWER_RAM");
+        if (power_ram && strcmp(power_ram, "fceux") == 0) {
+            for (size_t i = 0; i < sizeof(g_ram); i++)
+                g_ram[i] = (i & 4) ? 0xFF : 0x00;
+            printf("[runtime] WRAM power-on pattern: FCEUX 00x4/FFx4\n");
+        }
+    }
     memset(g_sram, 0xFF, sizeof(g_sram)); /* fresh battery SRAM = all 0xFF */
     if (!g_chr_is_rom) memset(g_chr_ram, 0, sizeof(g_chr_ram));
     memset(g_ppu_oam, 0, sizeof(g_ppu_oam));
@@ -408,6 +422,7 @@ void runtime_init(void) {
     load_dispatch_miss_policy_from_env();
     load_brk_policy_from_env();
     nes_fring_init_dump();
+    jsr_context_reset();
 }
 
 /* Deterministic VBlank simulation: fires NMI every N bus operations.
@@ -944,6 +959,11 @@ void maybe_trigger_vblank(int cycles) {
         g_ppuscroll_x_hud = 0;
         g_ppuscroll_y_hud = 0;
         g_ppuctrl_hud     = g_ppuctrl & 0x38;
+        /* Controller movies are sampled by video frame, not by NMI. Advance
+         * them even while the game has NMI disabled during reset/transitions. */
+        g_cosim_vframe =
+            (2ULL * g_frame_boundary_cyc + 29780ULL) / 59561ULL;
+        nes_video_frame_boundary(g_cosim_vframe);
         /* Fire the frame-boundary callback only when NMI is enabled. The callback
          * emits the co-sim trace post-handler. When NMI is disabled the callback is
          * skipped, but this is still a video frame the oracle counts — emit the
@@ -1022,6 +1042,12 @@ void maybe_fire_pending_vblank(void) {
     g_ppuscroll_x_hud = 0;
     g_ppuscroll_y_hud = 0;
     g_ppuctrl_hud     = g_ppuctrl & 0x38;
+
+    /* This deferred boundary is a real video frame too. Input must not pause
+     * merely because the NMI handler was deferred or disabled. */
+    g_cosim_vframe =
+        (2ULL * g_frame_boundary_cyc + 29780ULL) / 59561ULL;
+    nes_video_frame_boundary(g_cosim_vframe);
 
     if (g_ppuctrl & 0x80) {
         s_dbg_nmi_fires++;
@@ -1230,11 +1256,24 @@ static void wram_write_watch(uint16_t a, uint8_t oldv, uint8_t val) {
         if (s_ww_addrs[i] == a) {
             extern int g_current_bank;
             extern const char *g_last_recomp_func;
+#ifdef RECOMP_STACK_TRACKING
+            extern const char *g_recomp_stack[];
+            extern int g_recomp_stack_top;
+            const char *parent = (g_recomp_stack_top > 1)
+                ? g_recomp_stack[g_recomp_stack_top - 2] : "(none)";
+            int depth = g_recomp_stack_top;
+#else
+            const char *parent = "(untracked)";
+            int depth = 0;
+#endif
             FILE *o = s_ww_file ? s_ww_file : stderr;
-            fprintf(o, "{\"f\":%llu,\"adr\":\"0x%04x\",\"old\":\"0x%02x\",\"val\":\"0x%02x\","
-                       "\"bank\":%d,\"func\":\"%s\"}\n",
-                    (unsigned long long)g_frame_count, a, oldv, val,
-                    g_current_bank, g_last_recomp_func ? g_last_recomp_func : "?");
+            fprintf(o, "{\"f\":%llu,\"vf\":%llu,\"cyc\":%llu,\"adr\":\"0x%04x\",\"old\":\"0x%02x\",\"val\":\"0x%02x\","
+                       "\"bank\":%d,\"func\":\"%s\",\"parent\":\"%s\",\"depth\":%d}\n",
+                    (unsigned long long)g_frame_count,
+                    (unsigned long long)g_cosim_vframe,
+                    (unsigned long long)g_nes_cycles, a, oldv, val,
+                    g_current_bank, g_last_recomp_func ? g_last_recomp_func : "?",
+                    parent ? parent : "?", depth);
             fflush(o);
             break;
         }
@@ -1792,7 +1831,16 @@ static int     s_tail_caller  = -1;
  * return; every JMP tail in the callee inherits it. */
 static uint64_t s_jsr_context = 0;
 static uint64_t s_jsr_context_next = 0;
-static uint64_t s_jsr_unwind_context = 0;
+#define JSR_UNWIND_MAX 256
+static uint64_t s_jsr_unwind_contexts[JSR_UNWIND_MAX];
+static int s_jsr_unwind_n = 0;
+
+static void jsr_context_reset(void) {
+    s_jsr_context = 0;
+    s_jsr_context_next = 0;
+    s_jsr_unwind_n = 0;
+    memset(s_jsr_unwind_contexts, 0, sizeof(s_jsr_unwind_contexts));
+}
 
 uint64_t nes_jsr_context_enter(void) {
     uint64_t previous = s_jsr_context;
@@ -1805,9 +1853,14 @@ uint64_t nes_jsr_context_enter(void) {
 int nes_jsr_context_leave(uint64_t previous) {
     uint64_t leaving = s_jsr_context;
     s_jsr_context = previous;
-    if (leaving != 0 && s_jsr_unwind_context == leaving) {
-        s_jsr_unwind_context = 0;
-        return 1;
+    if (leaving != 0) {
+        for (int i = s_jsr_unwind_n - 1; i >= 0; i--) {
+            if (s_jsr_unwind_contexts[i] != leaving) continue;
+            for (int j = i + 1; j < s_jsr_unwind_n; j++)
+                s_jsr_unwind_contexts[j - 1] = s_jsr_unwind_contexts[j];
+            s_jsr_unwind_n--;
+            return 1;
+        }
     }
     return 0;
 }
@@ -1822,7 +1875,11 @@ void nes_jsr_context_unwind_current(void) {
      * logical frame instead.  Nested JSRs made by the JMP target may come and
      * go before control reaches this frame; leave() only consumes an exact
      * token match. */
-    if (s_jsr_context != 0) s_jsr_unwind_context = s_jsr_context;
+    if (s_jsr_context == 0) return;
+    for (int i = 0; i < s_jsr_unwind_n; i++)
+        if (s_jsr_unwind_contexts[i] == s_jsr_context) return;
+    if (s_jsr_unwind_n < JSR_UNWIND_MAX)
+        s_jsr_unwind_contexts[s_jsr_unwind_n++] = s_jsr_context;
 }
 
 /* Always-on ring of the last dispatches (addr, caller_bank, S, depth, kind)
@@ -1830,7 +1887,17 @@ void nes_jsr_context_unwind_current(void) {
  * handler. Kind: 'C'=call (JSR), 'T'=tail (JMP), 'M'=cycle match/defer,
  * 'D'=deferred lap consumed and driven. */
 #define DISPATCH_RING_N 512
-typedef struct { uint16_t addr; int16_t cb; uint8_t s; uint8_t depth; char kind; uint16_t wb; uint64_t ctx; } DispatchRingEnt;
+typedef struct {
+    uint16_t addr;
+    int16_t cb;
+    uint8_t s;
+    uint8_t depth;
+    char kind;
+    uint16_t wb;
+    uint16_t object_cursor;
+    uint16_t indirect_ptr;
+    uint64_t ctx;
+} DispatchRingEnt;
 static DispatchRingEnt s_dring[DISPATCH_RING_N];
 static uint32_t s_dring_head = 0;
 
@@ -1840,6 +1907,8 @@ static void dring_push(uint16_t addr, int cb, char kind) {
     e->depth = (uint8_t)(g_nes_dispatch_depth > 255 ? 255 : g_nes_dispatch_depth);
     e->kind = kind;
     e->wb = g_code_window_base;
+    e->object_cursor = (uint16_t)g_ram[0x50] | ((uint16_t)g_ram[0x51] << 8);
+    e->indirect_ptr = (uint16_t)g_ram[0x02] | ((uint16_t)g_ram[0x03] << 8);
     e->ctx = s_jsr_context;
     s_dring_head++;
 }
@@ -1853,6 +1922,8 @@ int nes_dring_last(int n, NesDispatchEvt *dst) {
         dst[i].addr         = src->addr;
         dst[i].caller_bank  = src->cb;
         dst[i].window_base  = src->wb;
+        dst[i].object_cursor = src->object_cursor;
+        dst[i].indirect_ptr = src->indirect_ptr;
         dst[i].s            = src->s;
         dst[i].depth        = src->depth;
         dst[i].jsr_context  = src->ctx;
@@ -1953,8 +2024,8 @@ int nes_dispatch_call(uint16_t addr, int caller_bank) {
  * control unwinds through the live C frames exactly as the 6502 expects; C
  * depth stays bounded by real JSR depth). The one unbounded shape is a JMP
  * CYCLE: a loop lap across functions adds C frames with ZERO net 6502-stack
- * change (same tail target, same S and same logical JSR context, already
- * active in this chain). On
+ * change (same tail target, S, and logical JSR context already active in this
+ * chain). On
  * detecting a lap, DEFER to the MATCHING ancestor tail frame: the lap body's
  * C frames between the two tails represent zero net 6502 stack, so unwinding
  * just them (via return/bail propagation) discards nothing, and the ancestor
@@ -1965,7 +2036,11 @@ int nes_dispatch_call(uint16_t addr, int caller_bank) {
  * unexpected exit when Video_Misc_Updates2's terminator RTS had no caller
  * frame left to resume). */
 #define TAIL_ACTIVE_MAX 64
-static struct { uint16_t addr; uint8_t s; uint64_t ctx; } s_tail_active[TAIL_ACTIVE_MAX];
+static struct {
+    uint16_t addr;
+    uint8_t s;
+    uint64_t ctx;
+} s_tail_active[TAIL_ACTIVE_MAX];
 static int s_tail_active_n = 0;
 static int s_tail_pending_slot = -1;
 
@@ -2010,7 +2085,8 @@ int call_by_address_tail(uint16_t addr, int caller_bank) {
         }
     }
     for (int i = 0; i < s_tail_active_n; i++) {
-        if (s_tail_active[i].addr == addr && s_tail_active[i].s == g_cpu.S &&
+        if (s_tail_active[i].addr == addr &&
+            s_tail_active[i].s == g_cpu.S &&
             s_tail_active[i].ctx == s_jsr_context) {
             /* Record the request separately from the later driven lap.  This
              * exposes false cycle matches in no-push-all-jsr builds:

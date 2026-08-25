@@ -46,7 +46,10 @@ typedef struct {
     char    sarg[128];     /* SCREENSHOT: filename; LOG/ASSERT: message */
 } Cmd;
 
-#define MAX_CMDS 4096
+/* Long public TAS movies easily exceed 4096 transitions after conversion to
+ * WAIT/HOLD/RELEASE commands. This remains static storage (about 9 MiB) so a
+ * malformed input file cannot force an unbounded allocation. */
+#define MAX_CMDS 65536
 static Cmd    s_cmds[MAX_CMDS];
 static int    s_cmd_count  = 0;
 static int    s_cmd_cursor = 0;
@@ -176,10 +179,16 @@ void script_tick(uint64_t frame, const uint8_t *ram) {
     if (!s_loaded || s_exit_code >= 0) return;
 
     /* Process commands until we need to block */
+    int executed_immediate = 0;
     while (s_cmd_cursor < s_cmd_count) {
         Cmd *c = &s_cmds[s_cmd_cursor];
 
         if (c->type == CMD_WAIT) {
+            /* HOLD/RELEASE commands for one input transition may share a tick,
+             * but the following positive WAIT starts on the next tick. Without
+             * this boundary every recorded transition cumulatively occurred
+             * one frame early on playback. */
+            if (c->iarg > 0 && executed_immediate) return;
             if (s_wait_left == 0) {
                 if (c->iarg == 0) { s_cmd_cursor++; continue; }
                 s_wait_left = c->iarg;
@@ -300,6 +309,7 @@ void script_tick(uint64_t frame, const uint8_t *ram) {
             default: break;
         }
         s_cmd_cursor++;
+        executed_immediate = 1;
     }
 
     /* Reached end of script with no EXIT — treat as EXIT 0 */

@@ -1,0 +1,60 @@
+{
+  "format_version": 1,
+  "rom": {
+    "payload_sha1": "7D47CD172B886ECE5B98CCB8FEACBACEFA465C3A",
+    "prg_chr_crc32": "45878D7F",
+    "region": "Japan"
+  },
+  "sources": {
+    "local": "../docs/memory_map.md",
+    "nnnes1": "https://wikiwiki.jp/nnnes1/%E3%82%AD%E3%83%A3%E3%83%83%E5%85%9A%E5%BF%8D%E4%BC%9D%E3%81%A6%E3%82%84%E3%82%93%E3%81%A7%E3%81%88"
+  },
+  "fields": [
+    {"address": "0x003A", "size": 1, "name": "requested_character", "status": "confirmed", "source": "local"},
+    {"address": "0x003B", "size": 1, "name": "active_character", "status": "confirmed", "source": "local+nnnes1", "values": {"0": "Speedy/Yattarou", "1": "Guido/Sukashii", "2": "Polly/Pururun", "3": "Rikinoshin", "4": "Gotton", "5": "Mietoru", "6": "Nekki"}},
+    {"address": "0x003F", "size": 1, "name": "player_health", "status": "confirmed", "source": "local+nnnes1"},
+    {"address": "0x0040", "size": 1, "name": "ninpo_power", "status": "external", "source": "nnnes1"},
+    {"address": "0x0041", "size": 1, "name": "help_gauge", "status": "external", "source": "nnnes1"},
+    {"address": "0x0043", "size": 2, "name": "lives", "status": "external", "source": "nnnes1", "encoding": "unknown_2byte"},
+    {"address": "0x0045", "size": 4, "name": "score_digits", "status": "external", "source": "nnnes1", "encoding": "one_decimal_digit_per_byte"},
+    {"address": "0x005D", "size": 1, "name": "round", "status": "external", "source": "nnnes1"},
+    {"address": "0x0083", "size": 1, "name": "vertical_movement_mode", "status": "confirmed", "source": "local"},
+    {"address": "0x0084", "size": 1, "name": "movement_mode", "status": "confirmed", "source": "local", "values": {"0": "idle", "1": "walk_right", "2": "run_right", "129": "walk_left", "130": "run_left"}},
+    {"address": "0x0087", "size": 1, "name": "jump_effect_flag", "status": "external", "source": "nnnes1"},
+    {"address": "0x0089", "size": 1, "name": "double_tap_state", "status": "confirmed", "source": "local"},
+    {"address": "0x008A", "size": 1, "name": "damage_invulnerability_timer", "status": "confirmed", "source": "local"},
+    {"address": "0x008F", "size": 1, "name": "collision_invulnerability", "status": "external", "source": "nnnes1"},
+    {"address": "0x00EA", "size": 1, "name": "pause_flags", "status": "confirmed", "source": "local", "encoding": "bit7_pause"},
+    {"address": "0x0401", "size": 2, "name": "player_x_8_8", "status": "confirmed", "source": "local+nnnes1", "encoding": "little_endian_8_8"},
+    {"address": "0x0403", "size": 2, "name": "player_y_8_8", "status": "confirmed", "source": "local+nnnes1", "encoding": "little_endian_8_8"},
+    {"address": "0x0405", "size": 2, "name": "player_vx_8_8", "status": "confirmed", "source": "local", "encoding": "signed_little_endian_8_8"},
+    {"address": "0x0407", "size": 2, "name": "player_vy_8_8", "status": "confirmed", "source": "local", "encoding": "signed_little_endian_8_8"},
+    {"address": "0x06F6", "size": 1, "name": "hard_mode_flag", "status": "external", "source": "nnnes1", "encoding": "bit7_hard_mode"}
+  ],
+  "object_table": {
+    "base": "0x0420",
+    "slots": 12,
+    "stride": "0x20",
+    "fields": {
+      "0x00": "flags",
+      "0x01": "x_fraction",
+      "0x02": "x_integer",
+      "0x03": "y_fraction",
+      "0x04": "y_integer",
+      "0x05": "vx_fraction",
+      "0x06": "vx_integer_signed",
+      "0x07": "vy_fraction",
+      "0x08": "vy_integer_signed",
+      "0x09": "metasprite",
+      "0x0A": "animation_sequence",
+      "0x0B": "animation_countdown",
+      "0x0C": "animation_frame",
+      "0x0D": "object_render_flags",
+      "0x0E": "type",
+      "0x0F": "behavior_state",
+      "0x10": "behavior_timer",
+      "0x12": "turn_sequence_flag",
+      "0x1C": "target_direction_flags"
+    }
+  }
+}

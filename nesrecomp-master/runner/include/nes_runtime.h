@@ -82,6 +82,8 @@ typedef struct {
     uint16_t addr;
     int16_t  caller_bank;
     uint16_t window_base;
+    uint16_t object_cursor;
+    uint16_t indirect_ptr;
     uint8_t  s;
     uint8_t  depth;
     uint64_t jsr_context;
@@ -256,6 +258,11 @@ uint8_t *runner_get_prg_bank_rw(int bank_num);
  * This is the NES architectural fix: RESET never returns, so NMI must be
  * injected inline whenever the game reads $2002 during a VBlank period. */
 void nes_vblank_callback(void);
+
+/* Called once at every physical video-frame boundary, including frames where
+ * PPUCTRL has NMI disabled. The runner uses this to advance deterministic
+ * movie/script input on the video clock rather than the NMI callback clock. */
+void nes_video_frame_boundary(uint64_t video_frame);
 
 /* Check elapsed time and fire VBlank if >=16ms has passed.
  * Called from generated JMP instructions to ensure games with tight idle

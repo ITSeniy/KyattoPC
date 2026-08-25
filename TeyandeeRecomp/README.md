@@ -110,13 +110,13 @@ they are intentionally versioned and must not be edited by hand.
 ## What was fixed
 
 The two most visible corruption bugs came from approximating timing and 6502
-call semantics at a higher level than the original machine:
+control flow at a higher level than the original machine:
 
-1. Teyandee uses `PLA; PLA; JMP` as a non-local return from a nested JSR. The
-   generated C used direct function calls and resumed the discarded caller,
-   allowing its object cursor to walk beyond `$0420-$0580` and eventually feed
-   object bytes into the PPU upload queue. The recompiler/runtime now track
-   logical JSR contexts and propagate that unwind through generated callers.
+1. The fixed-bank object walker crosses a non-contiguous forward JMP before
+   looping back. Separate generated tail calls could retain a stale lap and
+   advance the cursor beyond its `$0440-$05A0` pool. The two ROM entries are now
+   merged into one generated body, and the forward JMP becomes an in-body
+   `goto` while its public dispatcher entry remains available.
 2. The MMC3 status-bar IRQ is raised near the end of scanline 174, but its
    handler does not reach the CHR/scroll writes soon enough to affect scanline
    175 on real hardware. The scanline renderer now supports a game-selectable
@@ -124,7 +124,9 @@ call semantics at a higher level than the original machine:
    scanline 176.
 
 `game_dispatch_override()` retains a narrow object-pool guard as defense in
-depth. It does not replace the logical-JSR fix.
+depth. A later `$0640 → $5091/$3620/$04A9` sequence in the TAS is tracked
+separately: the repaired chain remains exact through its old failure window,
+while this second sequence first changes a known gameplay field on frame 1980.
 
 ## Transition regression debugger
 
@@ -141,6 +143,30 @@ Launch the executable printed by the build helper, attach the monitor in a
 second terminal, then leave a location and return. A fixed run should remain
 uninterrupted; any impossible object cursor parks the game and writes a full
 report. See [`docs/transition_debug.md`](docs/transition_debug.md).
+
+## RAM/ROM map capture
+
+For controlled playtest captures, run:
+
+```powershell
+./tools/run_ram_capture.ps1
+```
+
+The workflow records controller input, opens an in-game marker prompt on F9,
+exports selected full-WRAM frame snapshots, and generates a ranked RAM-candidate
+CSV plus object lifecycles, known-field values, and generated-code RAM xrefs.
+Type `DONE` in the prompt to finish the session. Use
+several short, single-purpose sessions rather than one full playthrough. See
+[`docs/ram_map_capture.md`](docs/ram_map_capture.md) for the marker protocol and
+recommended scenarios. Confirmed addresses and open hypotheses live in the
+canonical [`docs/memory_map.md`](docs/memory_map.md).
+
+Public cheat-table seeds, a RetroAchievements operand importer, and an FCEUX
+FM2-to-input converter are documented in
+[`docs/external_research_sources.md`](docs/external_research_sources.md). The
+published TAS can also run headlessly as a deterministic whole-game regression.
+Frame-by-frame FCEUX/native WRAM comparison and the first located TAS divergence are
+documented in [`docs/tas_desync_analysis.md`](docs/tas_desync_analysis.md).
 
 ## Text overrides
 

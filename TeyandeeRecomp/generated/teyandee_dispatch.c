@@ -907,6 +907,7 @@ void func_DEA5(void);
 void func_DE95(void);
 void func_DE8D(void);
 void func_DE98(void);
+void func_E1AB(void);
 void func_D8E6(void);
 void func_D8ED(void);
 void func_D8F6(void);
@@ -1539,7 +1540,6 @@ void func_DD70(void);
 void func_E587(void);
 void func_DD01(void);
 void func_DCF9(void);
-void func_E1AB(void);
 void func_DEA8(void);
 void func_D9F1(void);
 void func_DA0E(void);
@@ -8426,6 +8426,8 @@ _dispatch_retry:
             func_DE8D(); break;
         case 0xDE98:
             func_DE98(); break;
+        case 0xE1AB:
+            func_E1AB(); break;
         case 0xD8E6:
             func_D8E6(); break;
         case 0xD8ED:
@@ -9812,8 +9814,6 @@ _dispatch_retry:
             func_DD01(); break;
         case 0xDCF9:
             func_DCF9(); break;
-        case 0xE1AB:
-            func_E1AB(); break;
         case 0xDEA8:
             func_DEA8(); break;
         case 0xD9F1:

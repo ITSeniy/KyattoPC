@@ -145,6 +145,30 @@ describe("function discovery", () => {
     expect(result.dispatchEntries).toContain("C010");
   });
 
+  it("keeps a forward non-contiguous merge JMP inside one generated body", () => {
+    const rom = new RomBuilder()
+      .org(0xc000)
+      .jmp(0xc020)
+      .org(0xc020)
+      .jsr(0xc030)
+      .jmp(0xc000)
+      .org(0xc030)
+      .rts()
+      .vectors(0xc000, 0xc000, 0xc000)
+      .writeTemp("forward_merge_loop.nes");
+
+    const result = recompile(rom, `
+[[merge_func]]
+bank = 0
+addr_lo = 0xC000
+addr_hi = 0xC020
+`);
+
+    expect(result.fullC).toMatch(/goto label_C020;/);
+    expect(result.fullC).toMatch(/void func_C020\(void\)/);
+    expect(result.dispatchEntries).toContain("C020");
+  });
+
   it("Tier-1 unofficial: \\$EB SBC #imm alias generates SBC code", () => {
     // Function uses \$EB, which the audit identified as the SBC #imm
     // alias. Codegen should emit the same SBC scaffold as \$E9.
@@ -248,6 +272,19 @@ describe("function discovery", () => {
     // so JMP ($DEFF) at runtime also reads the correct page.
     expect(result.fullC).toContain("nes_read16_jmpbug(0xDEFF)");
     expect(result.fullC).not.toContain("nes_read16(0xDEFF)");
+    expect(result.fullC).toContain("call_by_address_tail(_jt, -1)");
+  });
+
+  it("JMP (zero page indirect) uses the flat tail trampoline", () => {
+    const rom = new RomBuilder()
+      .org(0xc000)
+      .emit([0x6c, 0x02, 0x00]) // JMP ($0002)
+      .vectors(0xc000, 0xc000, 0xc000)
+      .writeTemp("jmp_indirect_zp_tail.nes");
+
+    const result = recompile(rom);
+    expect(result.fullC).toContain("nes_read16zp(0x02)");
+    expect(result.fullC).toContain("call_by_address_tail(_jt, -1)");
   });
 });
 
