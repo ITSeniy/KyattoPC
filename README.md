@@ -96,3 +96,9 @@ changes; the reverse-debug workflow is documented in
   license for the new project-specific code has not been selected yet; choose
   one before accepting outside contributions. No license is implied for the
   original game or its assets.
+
+## Русский
+
+Нативная статическая рекомпиляция Kyatto Ninden Teyandee для ПК на базе доработанного NESRecomp.
+
+MIT относится только к авторскому коду; лицензии сторонних компонентов сохраняются.

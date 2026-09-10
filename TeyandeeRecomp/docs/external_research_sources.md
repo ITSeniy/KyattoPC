@@ -29,11 +29,11 @@ provides several useful independent leads:
 |---|---|---|
 | `$003B` | active character (`00`-`06`) | independently confirmed |
 | `$003F` | health (`0A`) | independently confirmed |
-| `$0040` | ninpo power | untested external seed |
-| `$0041` | HELP gauge | untested external seed |
-| `$0043-$0044` | lives | encoding still unknown |
-| `$0045-$0048` | score, one decimal digit per byte | untested external seed |
-| `$005D` | round (`01`-`0B`) | strong external seed |
+| `$0040` | ninpo power | reader/writer evidence found; depletion capture still needed |
+| `$0041` | HELP gauge | independently confirmed (`C0 -> 63 -> 01`) |
+| `$0043-$0044` | lives | `$0044` independently confirmed; `$0043` role still unknown |
+| `$0045-$0048` | score, one decimal digit per byte | independently confirmed as decimal hundreds digits |
+| `$005D` | round (`01`-`0B`) | independently confirmed (`01 -> 02`) |
 | `$0087` | jump-related effect | meaning remains ambiguous |
 | `$008F` | collision/invulnerability cheat | meaning remains ambiguous |
 | `$0402/$0404` | player integer X/Y | independently confirmed as the high bytes of 8.8 coordinates |

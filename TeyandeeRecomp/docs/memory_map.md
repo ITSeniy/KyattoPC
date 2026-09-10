@@ -36,15 +36,17 @@ Status vocabulary:
 | `$0034` | 1 | inferred | PPU scroll Y shadow | Restored by the NMI path. |
 | `$0036` | 1 | inferred | last MMC3 bank-select | Tracks the mapper `$8000` selection. |
 | `$0037` | 1 | confirmed | IRQ mode flags | Bit 7 dispatches the bank-3 scene IRQ at CPU `$8006`. |
-| `$003A` | 1 | confirmed | selected/target character ID | Encoding is `0 = Speedy`, `1 = Guido`, `2 = Polly`. Fixed-bank `$CEA8-$CEB3` increments it and wraps at 3; `$CF64/$CF7A` copy it to `$003B` when the requested character becomes active. |
-| `$003B` | 1 | confirmed | active character ID | Same encoding as `$003A`. Initialized together with `$003A` at `$C14C-$C14E`, written by `$CF96`, and read by player/HUD code including bank-4 `$9ADA` and `$9A52`. Bank-4 `$9A63-$9A67` compares the selected and active IDs. |
+| `$003A` | 1 | confirmed | requested main-character ID | Encoding is `0 = Speedy`, `1 = Guido`, `2 = Polly`. Fixed-bank `$CEA8-$CEB3` increments it and wraps at 3; `$CF64/$CF7A` copy it to `$003B` when the requested character becomes active. It remains `2` while Polly temporarily changes into any support cat, so the support IDs do not extend this field. |
+| `$003B` | 1 | confirmed | active controlled-character ID | Encoding is `0 = Speedy`, `1 = Guido`, `2 = Polly`, `3 = General Catton/Rikinoshin`, `4 = Meowzma O'Tool/Gotton`, `5 = Bat Cat/Mietoru`, `6 = Spritz T. Cat/Nekki`. Initialized together with `$003A` at `$C14C-$C14E`, written by `$CF96`, and read by player/HUD code including bank-4 `$9ADA` and `$9A52`. Bank-4 `$9A63-$9A67` compares the requested and active IDs. |
+| `$003D` | 1 | confirmed | selected ninpo slot | Values are `1`, `2`, and `3` for the three HUD icons. The controlled markers are exactly `$01/$02/$03`; fixed `$DA7A-$DA84` increments the field and wraps `$04` to `$01`, while `$C58A`, `$DBA5`, and other ninpo paths use it to choose HUD graphics, cost, and behavior. |
 | `$003F` | 1 | confirmed | player health | Half-heart units: `$0A` is five full hearts and each ordinary hit subtracts 1. Fixed-bank `$C426-$C428` initializes it to `$0A`; damage paths at model `$B3FD` and fixed `$D9A6/$D9AD` decrement it; fixed `$C324-$C328` tests zero for death. |
-| `$0040` | 1 | external | ninpo power | Published for the matching Japanese ROM by the NNNesterJ cheat table. Needs an isolated pickup/use capture and reader/writer attribution. |
-| `$0041` | 1 | external | HELP gauge | Published for the matching Japanese ROM. Exact units and helper mechanics are still untested. |
-| `$0043-$0044` | 2 | external | lives | Published as a two-address lives cheat. Byte order/encoding and whether one byte is a display shadow remain unknown. |
-| `$0045-$0048` | 4 | external | score digits | Published as one decimal digit per byte. Needs score-gain and continue/reset captures. |
+| `$0040` | 1 | external | ninpo power | Published for the matching Japanese ROM. It remains `$FF` at all three ninpo-slot markers, proving that it is not the selected slot; fixed `$C424` initializes it to `$FF` and the ninpo-cost path at `$DBB8+` compares it with a slot-dependent cost. A full/partly-used/empty capture is still needed to confirm units and depletion. |
+| `$0041` | 1 | confirmed | HELP gauge | `HELP_FULL`, `HELP_HALF_USED`, and `HELP_EMPTY` record `$C0`, `$63`, and `$01`. Fixed `$C41E-$C420` initializes the full value, pickup handler `$DA5E-$DA60` refills it, bank-4 `$9A52+` compares it against character-dependent thresholds and recharges it toward `$C0`, and `$C5CC+` converts it into the HUD bar tile. |
+| `$0043` | 1 | candidate | lives-adjacent field | Cleared at new-game initialization by fixed `$C128` and remains zero in the controlled two-life/one-life markers. The public cheat groups it with `$0044`, but the local evidence does not yet establish a normal gameplay role. |
+| `$0044` | 1 | confirmed | remaining lives | The controlled markers read `$02` and `$01`, matching the HUD. Fixed `$C12A-$C12C` initializes it to 2 and death/continue path `$C378` decrements it; a negative result selects game over. |
+| `$0045-$0048` | 4 | confirmed | score, decimal hundreds digits | One decimal digit per byte, most significant first. The stored value omits the two always-zero point digits: `00 00 00 00`, `00 00 00 01`, and `00 00 00 02` display as 0, 100, and 200 points. Fixed `$C121-$C126` clears the range; `$E66A-$E68F` adds an object's score at `$0048` and propagates decimal carry back through `$0045`. |
 | `$0050-$0051` | 2 | confirmed | object-walker cursor | Starts at `$0420`, advances by `$20`, and ends at `$05A0`. |
-| `$005D` | 1 | external | round ID | Published range is `$01-$0B`, matching the game's 11 rounds. This is the highest-priority next mode/stage capture. |
+| `$005D` | 1 | confirmed | round ID | Controlled first/second-round markers read `$01/$02`. Bank-4 `$9884-$98A1` changes the field with a `$01-$0B` range, while fixed gameplay setup and stage transitions read it throughout `$C0FC+` and `$C3CC+`. |
 | `$007E` bits 0-1 | 2 bits | confirmed | damage/invulnerability phase | `00` normally, `11` during the initial hit/knockback phase, then `10` during post-hit blinking. Damage code at model `$B3F7-$B3FB` rejects another hit while bit 1 is set; fixed `$D9AF-$DA27` starts and advances the two phases. Other bits of `$007E` have separate meanings. |
 | `$0083` | 1 | confirmed | vertical-movement mode | `0` while grounded and `1` during an ordinary short or long jump in the Polly capture. ROM code also assigns additional values in ceiling/alternate-gravity paths, so this is a mode byte rather than a Boolean airborne flag. |
 | `$0084` | 1 | confirmed | horizontal movement mode/direction | `$00` is idle; `$01/$81` walk right/left; `$02/$82` run right/left. Thus bit 7 is left direction and the low bits select walking or running. Fixed `$D293`, `$D34E-$D350`, and `$D4DC-$D4E9` construct these values; fixed `$D1C0-$D206` selects and applies the corresponding speed profile. |
@@ -60,7 +62,7 @@ Status vocabulary:
 | `$0401-$0402` | 2 | confirmed | player screen X, 8.8 fixed point | Fractional byte first, integer pixel byte second: `X = $0402 + $0401 / 256`. `$0402` is `$30` idle, `$28` after moving left, and `$6A` after moving right. Fixed `$D2EF-$D30F` propagates carry from `$0401` into `$0402`; player movement code around model `$B464-$B488` reads and modifies `$0402`. |
 | `$0403-$0404` | 2 | confirmed | player screen Y, 8.8 fixed point | Fractional byte first, integer pixel byte second: `Y = $0404 + $0403 / 256`. `$0404` is `$80` on the ground, `$6F` at `SHORT_JUMP`, and `$59` at `LONG_JUMP`. Vertical physics around model `$B7BA-$B7DC` propagates carry into `$0404`, which is also used by collision paths. |
 | `$0405-$0406` | 2 | confirmed | horizontal speed magnitude, 8.8 fixed point | Fractional byte first, integer byte second. The walking marker has `$0100` (1.0 pixel per gameplay frame), while `RUNNING` has `$0180` (1.5 pixels). Fixed `$D4EB-$D4F2` explicitly installs `$0180` when the double-tap detector activates running; `$0084` carries the direction and gates application of the magnitude. |
-| `$0409` | 1 | candidate | player character/animation state | At the three level-idle markers it is `$01/$10/$20` for Speedy/Guido/Polly, but later advances to `$11/$21` in the latter sessions. It correlates with character graphics/state, not a stable character ID. |
+| `$0409` | 1 | confirmed | player character/animation code | The high nibble is the active-character graphics family and the low nibble is an animation/action selector. Support-cat markers give `$30/$40/$50/$60` for active IDs 3-6, while Polly action captures vary `$20->$22->$27`. Fixed `$C520-$C52B` explicitly writes `($003B << 4) + animation`, and `$DC7F` advances it from animation-sequence data. |
 | `$0420-$059F` | 12 × `$20` | confirmed | object slots | Fixed-bank `$DE74` walker. The first isolated enemy capture maps the common position, velocity, animation, type, and state fields documented below. |
 | `$060A+` | variable | inferred | palette/upload staging | Used by boot/NMI rendering setup. Exact range and record structure are open. |
 | `$06F6` bit 7 | 1 bit | external | secret hard-mode flag | Public cheat value `$80`; RetroAchievements also contains hard-mode challenges. Needs a normal-mode/hard-mode paired capture. |
@@ -141,8 +143,10 @@ every named marker.
 - `$0025/$0026` settle at `$04/$05`, `$08/$09`, and `$0C/$0D`. Bank-4 `$9ADA`
   derives these mapper shadow values by indexing a CHR table with `$003B`, so
   they are character graphics banks rather than additional character IDs.
-- `$0409` differs at the same idle markers, but continues changing afterward;
-  it remains only a candidate player-slot animation/graphics field.
+- `$0409` differs at the same idle markers and continues changing afterward.
+  These captures first identified it as a player-slot animation/graphics
+  candidate; the later support-character capture and fixed `$C520-$C52B`
+  writer establish the high/low-nibble encoding documented above.
 
 Session `ram-20260821-131941` follows Polly through idle movement, two jump
 heights, and repeated contact damage. Its ten F9 markers all have matching
@@ -162,8 +166,8 @@ later frame reached while switching windows.
   movement marker. This disproves the earlier narrow ceiling-only name and
   establishes it as a broader vertical-movement mode.
 - `$0409` is `$20` at idle and `$22` during both jumps, then reaches `$27`
-  during damage. This further supports animation/action state, but its full
-  encoding is not yet isolated.
+  during damage. Together with the later character-family capture, these low
+  nibble changes isolate the animation/action part of its encoding.
 
 Session `ram-20260821-133054` isolates Polly at `IDLE`, `WALKING`, `RUNNING`,
 before and after enemy contact, and during recovery.
@@ -242,6 +246,50 @@ markers: index 4, base `$04A0`.
 - Bit 7 of `+$1C` sets at frame 1440, before either the slower pre-turn velocity
   or the actual facing change. It is retained as a direction-request candidate,
   deliberately separate from the confirmed current-facing flag at `+$00` bit 2.
+
+Sessions `ram-20260825-225056`, `ram-20260825-225232`, and
+`ram-20260825-225315` isolate lives, score, and the round number.
+
+- `2_LIFES` and `1_LIVE` change `$0044` from `$02` to `$01`; `$0043` remains
+  zero. This matches the HUD and fixed `$C378` decrement path. The spelling of
+  a marker label has no effect on analysis.
+- `ZERO_SCORE`, `100_SCORE`, and `200_SCORE` contain `$0045-$0048 =
+  00 00 00 00`, `00 00 00 01`, and `00 00 00 02`. The HUD appends two zero
+  point digits, so the four RAM bytes are decimal hundreds digits rather than
+  an ordinary binary integer.
+- `FIRST_ROUND` and `SECOND_ROUND` change `$005D` from `$01` to `$02`. The
+  simultaneous score and health changes are unrelated gameplay progress and
+  do not affect the isolated round byte.
+
+Session `ram-20260825-225511` compares the three ninpo icons.
+
+- `$003D` is exactly `$01`, `$02`, and `$03` at `FIRST_NINPO`,
+  `SECOND_NINPO`, and `THIRD_NINPO`. Fixed `$DA7A-$DA84` supplies the matching
+  three-state cycle, so the field is confirmed as the selected ninpo slot.
+- `$0040` remains `$FF` at all three markers. These screenshots therefore
+  distinguish selection from energy, but they do not yet test ninpo-power
+  depletion.
+
+Session `ram-20260825-225601` follows the HELP gauge from full through an active
+support transformation to near-empty. Its raw labels are `HEKLP_FULL`,
+`HELP_HALF_USED`, and `HELP_EXPTY`; the two spelling slips are harmless.
+
+- `$0041` moves `$C0 -> $63 -> $01`, matching the full, roughly half, and
+  one-step HUD bars. At the latter two markers `$003A` stays Polly (`2`) while
+  `$003B` is Bat Cat (`5`), confirming that requested and active character IDs
+  intentionally diverge during support play.
+- `$0409` is `$20` for Polly and `$51/$50` for Bat Cat. The low-nibble change
+  is animation state; the high nibble follows the active-character ID.
+
+Session `ram-20260825-225653` isolates all support transformations from Polly.
+
+- `$003A` remains `2` throughout. `$003B` reads `2, 4, 3, 3, 5, 6` at
+  `POLLY_PLAYER`, `MEOWZMA_PLAYER`, `GENERAL_CATTON_PLAYER`, the accidental
+  duplicate, `BAT_CAT_PLAYER`, and `SPRITZ_PLAYER`. The duplicate is harmless
+  and independently repeats General Catton's ID.
+- At the same markers `$0409` reads `$20/$40/$30/$30/$50/$60`. Fixed
+  `$C520-$C52B` constructs this value from `$003B << 4` plus an animation
+  selector, completing the player character/animation-code attribution.
 
 ## Promotion checklist
 

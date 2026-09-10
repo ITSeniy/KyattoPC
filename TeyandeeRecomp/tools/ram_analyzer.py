@@ -62,6 +62,10 @@ def decode_value(ram: bytes, field: dict[str, Any]) -> dict[str, Any]:
         display = f"{signed_hi + raw[0] / 256:.3f} (${raw[1]:02X}.${raw[0]:02X})"
     elif encoding == "one_decimal_digit_per_byte":
         display = "".join(str(value) for value in raw)
+    elif encoding == "decimal_digits_times_100":
+        display = "".join(str(value) for value in raw) + "00"
+    elif encoding == "character_high_nibble_animation_low_nibble":
+        display = f"character {raw[0] >> 4}, animation ${raw[0] & 0x0F:X} (${raw[0]:02X})"
     values = field.get("values", {})
     if str(integer) in values:
         display += f" ({values[str(integer)]})"
@@ -302,8 +306,9 @@ def render_markdown(result: dict[str, Any]) -> str:
         "",
     ]
     selected_names = [
-        "active_character", "player_health", "round", "movement_mode",
-        "vertical_movement_mode", "player_x_8_8", "player_y_8_8",
+        "requested_character", "active_character", "player_animation_code", "player_health",
+        "ninpo_slot", "ninpo_power", "help_gauge", "lives", "score", "round",
+        "movement_mode", "vertical_movement_mode", "player_x_8_8", "player_y_8_8",
     ]
     lines.append("| Frame | Marker | " + " | ".join(selected_names) + " |")
     lines.append("|---:|---|" + "---|" * len(selected_names))
